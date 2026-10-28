@@ -1,5 +1,17 @@
 import type { z } from 'zod';
 import {
+  adminActionResponseSchema,
+  adminReviewsResponseSchema,
+  adminTeamsResponseSchema,
+  resultsResponseSchema,
+  startGameResponseSchema,
+  type AdminActionResponse,
+  type AdminReviewsResponse,
+  type AdminTeamsResponse,
+  type ResultsResponse,
+  type ReviewDecision,
+  type RouteName,
+  type StartGameResponse,
   answerResponseSchema,
   errorResponseSchema,
   healthResponseSchema,
@@ -135,3 +147,38 @@ export const uploadToS3 = async (upload: PhotoUploadResponse, file: Blob): Promi
   }
   if (!res.ok) throw new ApiError('INTERNAL', `Upload failed (${res.status})`);
 };
+
+// Game master (/admin) and public results.
+
+export const getAdminTeams = (): Promise<AdminTeamsResponse> =>
+  request('GET', '/admin/teams', adminTeamsResponseSchema);
+
+export const getReviews = (): Promise<AdminReviewsResponse> =>
+  request('GET', '/admin/reviews', adminReviewsResponseSchema);
+
+export const decideReview = (
+  teamId: string,
+  attemptId: string,
+  decision: ReviewDecision,
+): Promise<AdminActionResponse> =>
+  request('POST', `/admin/reviews/${teamId}/${attemptId}`, adminActionResponseSchema, {
+    body: decision,
+  });
+
+export const acceptTextAnswer = (teamId: string, attemptId: string): Promise<AdminActionResponse> =>
+  request('POST', `/admin/attempts/${teamId}/${attemptId}/accept`, adminActionResponseSchema);
+
+export const setTeamRoute = (teamId: string, route: RouteName): Promise<AdminActionResponse> =>
+  request('POST', `/admin/teams/${teamId}/route`, adminActionResponseSchema, { body: { route } });
+
+export const setTieBreak = (teamIds: string[]): Promise<AdminActionResponse> =>
+  request('POST', '/admin/game/tie-break', adminActionResponseSchema, { body: { teamIds } });
+
+export const startGame = (): Promise<StartGameResponse> =>
+  request('POST', '/admin/game/start', startGameResponseSchema);
+
+export const publishResults = (): Promise<AdminActionResponse> =>
+  request('POST', '/admin/game/publish-results', adminActionResponseSchema);
+
+export const getResults = (): Promise<ResultsResponse> =>
+  request('GET', '/results', resultsResponseSchema, { auth: false });

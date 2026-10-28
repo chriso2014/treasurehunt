@@ -59,18 +59,21 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
 - `question` is null until revealed. `hint` is null until used. `hintPenaltyMs`/`skipPenaltyMs` are what using the hint or skipping would add, for the confirm dialogs. Correct answers are never included.
 - The client shows a live timer by counting up locally from `elapsedMs`, using `serverTime` to correct clock skew, and re-syncs on every response.
 
-## Game master (provisional, refined in the admin round)
-| Method & path | Effect |
-|---------------|--------|
-| `POST /admin/game/start` | `registration` → `live`; every registered team gets its stage 1 clue. Returns `{ status: 'live', teamsStarted }`. Safe to repeat (finishes a partial start). Also `npm run start-game -- <env>` |
-| `GET /admin/teams` | Leaderboard: teams, stage, totals, status |
-| `PUT /admin/teams/{teamId}/route` | Override route (before start only) |
-| `GET /admin/reviews` | Pending photo/video submissions (photo pre-signed URLs) |
-| `POST /admin/reviews/{teamId}/{attemptSk}` | `{ decision: approved|declined, reason? }` (phase 7; the logic is `lib/review.ts`, used by `npm run review` until then) |
-| `POST /admin/attempts/{teamId}/{attemptSk}/accept` | Accept a wrong text answer manually |
-| `POST /admin/teams/{teamId}/adjust` | `{ stage, deltaMs, note }`: manual time correction (logged) |
-| `PUT /admin/game/tie-break` | `{ teamIds: [...] }` |
-| `POST /admin/game/publish-results` | Make results public; game `finished` |
+## Game master
+All require the `gamemaster` group (403 otherwise). Writes are conditional and return `{ applied }`: `false` means it had already been done (a repeated tap).
+
+| Method & path | Body | Effect |
+|---------------|------|--------|
+| `POST /admin/game/start` | none | `registration` → `live`; every registered team gets its stage 1 clue. Returns `{ status: 'live', teamsStarted }`. Safe to repeat (finishes a partial start). Also `npm run start-game -- <env>` |
+| `GET /admin/teams` | none | `{ game: { status, resultsPublished }, teams: [...] }`: name, photo URL, route, status, stage x of y, current stage status, live `totalMs`, `rank` (finished teams only), and `wrongAnswers` (wrong text answers on the open stage, acceptable by the GM). Finished teams by rank, then playing teams by progress, then registered |
+| `GET /admin/reviews` | none | `{ reviews: [...] }`: pending photos and dance calls, oldest first, with question text and photo URL |
+| `POST /admin/reviews/{teamId}/{attemptId}` | `{ decision: approved\|declined, reason? }` | Approve: stage completes. Decline photo: penalty, timer resumes, team sees the reason. Decline dance: penalty, team finishes. Also `npm run review -- <env>` |
+| `POST /admin/attempts/{teamId}/{attemptId}/accept` | none | Accept a wrong text answer on the team's open stage: completes it as `gm_accepted`, timer stops at that answer's submission, its penalty and later wrong-answer penalties on the stage are removed |
+| `POST /admin/teams/{teamId}/route` | `{ route: A\|B }` | Route override, only while the team is `registered` (409 after) |
+| `POST /admin/game/tie-break` | `{ teamIds: [...] }` | Order for teams with equal totals (earlier = higher) |
+| `POST /admin/game/publish-results` | none | Game `finished`, `resultsPublished`; team actions stop (`GAME_NOT_LIVE`); `/results` opens |
+
+Not built (A9, manual time adjustment): add it only if the rehearsal shows a need.
 
 ## Polling (ADR-007)
 - Team: `GET /teams/me/state` every 5 s while the game is in `registration`, every 3 s while `current.status = awaiting_review`.
@@ -78,4 +81,4 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
 - These GET endpoints must be cheap and side-effect free.
 
 ## Public results
-| `GET /results` | public | 404 until published; then ranking, team names, photos, totals |
+| `GET /results` | public | 404 until published; then `{ title, teams: [{ rank, name, photoUrl, totalMs, finished }] }`. Teams that never started are left out |

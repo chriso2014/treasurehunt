@@ -53,6 +53,9 @@ export const Finished = ({ state }: { state: TeamState }) => (
       <SafeImage src={state.team.photoUrl} alt="Team photo" className="w-full rounded-2xl" />
     )}
     <p className="text-center text-2xl">Well done, {state.team.name}!</p>
+    {state.team.status !== 'finished' && (
+      <p className="text-center text-lg">The game master has ended the game.</p>
+    )}
     <p className="text-center text-lg text-slate-300">Your total time</p>
     <p className="text-center font-mono text-5xl font-bold text-amber-300">
       {formatDuration(state.team.totalMs)}
