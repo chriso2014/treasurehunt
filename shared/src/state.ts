@@ -94,6 +94,8 @@ export const teamStateSchema = z.object({
   /** Null before the start and after finishing. */
   current: currentStageSchema.nullable(),
   completedLocations: z.array(z.object({ name: z.string(), lat: z.number(), lng: z.number() })),
+  /** Where the map starts before anything is completed (content config). */
+  map: z.object({ centre: z.object({ lat: z.number(), lng: z.number() }), zoom: z.number() }),
   /** Finished stages in order, for the breakdown of the team's time. */
   results: z.array(stageResultSchema),
 });

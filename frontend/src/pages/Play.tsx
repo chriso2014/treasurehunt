@@ -12,7 +12,8 @@ import {
   videoCall,
   type Answer,
 } from '../api/client.js';
-import { Button, ErrorMessage, SafeImage, Screen } from '../components/ui.js';
+import { MapView } from '../components/MapView.js';
+import { Button, ErrorMessage, LinkButton, SafeImage, Screen } from '../components/ui.js';
 import { errorText } from '../lib/errors.js';
 import { resizeToJpeg } from '../lib/image.js';
 import { formatDuration, useTicker } from '../lib/time.js';
@@ -33,6 +34,7 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState('');
+  const [showMap, setShowMap] = useState(false);
 
   const running = current.timer.running;
   const stageMs = useTicker(current.timer.elapsedMs, running, receivedAt);
@@ -209,6 +211,17 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
       {current.status === 'awaiting_review' && <AwaitingReview current={current} />}
 
       <ErrorMessage>{error}</ErrorMessage>
+
+      <section className="flex flex-col gap-3">
+        <LinkButton onClick={() => setShowMap((s) => !s)}>
+          {showMap
+            ? 'Hide map'
+            : state.completedLocations.length === 0
+              ? 'Map of Hitchin'
+              : `Map of places you’ve found (${state.completedLocations.length})`}
+        </LinkButton>
+        {showMap && <MapView locations={state.completedLocations} start={state.map} />}
+      </section>
     </Screen>
   );
 };

@@ -1,4 +1,5 @@
 import type { StageResult, TeamState } from '@treasurehunt/shared';
+import { MapView } from '../components/MapView.js';
 import { SafeImage, Screen } from '../components/ui.js';
 import { formatDuration } from '../lib/time.js';
 
@@ -61,5 +62,11 @@ export const Finished = ({ state }: { state: TeamState }) => (
       {formatDuration(state.team.totalMs)}
     </p>
     {state.results.length > 0 && <Breakdown results={state.results} />}
+    {state.completedLocations.length > 0 && (
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">Where you went</h2>
+        <MapView locations={state.completedLocations} start={state.map} />
+      </section>
+    )}
   </Screen>
 );

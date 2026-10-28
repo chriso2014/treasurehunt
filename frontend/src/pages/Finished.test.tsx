@@ -17,6 +17,7 @@ const state: TeamState = {
   },
   current: null,
   completedLocations: [],
+  map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
   results: [
     { stage: 1, outcome: 'correct', timeMs: 120_000, penaltyMs: 0, penalties: [] },
     {

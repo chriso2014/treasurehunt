@@ -14,7 +14,7 @@ Each phase should fit in one or two Claude sessions and ends with something test
 | 5 | Hints + skip | `hint`, `skip` endpoints with rules and penalties; confirm dialogs in the UI | Done (PR open; needs a phone test on dev) |
 | 6 | Photo + dance questions | Submission photo upload, `awaiting_review` pause, WhatsApp link from SSM; team polling while waiting | Done (PR open; decisions via `npm run review` until the GM screen in phase 7) |
 | 7 | Admin console | `/admin`: leaderboard, review queue with approve/decline + reason, accept text answer, route override, tie-break, publish results; GM polling; public `/results` | Done (PR open; A9 time adjustment left out until needed) |
-| 8 | Map + finished screen | Leaflet map of completed locations; finished screen with total | Not started |
+| 8 | Map + finished screen | Leaflet map of completed locations; finished screen with total | Done (PR open) |
 | 9 | Hardening + rehearsal | Retry/double-tap safety verified; `e2e:dev` passes; alarms; prod deploy; real content seeded; rehearsal in Hitchin on iOS + Android | Not started |
 | 9b | Optional: cartoon team photo | Provider tested and chosen (ADR-010); async `stylisePhoto` Lambda; fallback to original | Not started (decide provider first) |
 | 10 | Post-event cleanup | Results shared; `cleanup` script run on prod; stacks deleted or kept | Not started |
