@@ -59,7 +59,7 @@ Team-facing fields: **team name**, **password**, **team photo** (taken with the 
 
 ## Content loading (agreed)
 - Real content is written in `content/game.private.json` (**gitignored**, as the repo is public). `content/game.example.json` shows the shape.
-- `npm run seed -- <env>` validates the file and writes it to the `Content` table (replacing existing items); clue/question/hint images are uploaded from `content/images/` (gitignored) to the assets bucket under `content/`. `npm run seed -- --check` validates only, without AWS.
+- `npm run seed -- <env>` validates the file and writes it to the `Content` table (replacing existing items); clue/question/hint images are uploaded from `content/images/` (gitignored) to the assets bucket under `content/`. `npm run seed -- --check` validates only, without AWS. A referenced image missing from `content/images/` fails the seed unless `--allow-missing-images` is passed.
 - No content-editing UI: edit the file and re-run the seed.
 
 ## Gameplay (agreed)

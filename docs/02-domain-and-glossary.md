@@ -77,9 +77,10 @@ Normalisation (applied to both sides):
 - number words ↔ digits ("seven" = "7") where `numeric: true`
 
 Tolerance (per question, sensible default):
-- `maxTypos`: allowed edit distance (Levenshtein). Default `1` for answers ≤ 6 chars, `2` for longer
-- `contains`: optional. Correct if the submission contains a required keyword (e.g. "St Mary's" within a longer sentence)
-- `numeric`: optional. Correct if within `±tolerance` of a number
+- `maxTypos`: allowed edit distance (Levenshtein). Default `0` for numbers and answers ≤ 3 chars (so "1851" never passes for "1850"), `1` up to 6 chars, `2` for longer
+- `contains`: optional. Correct if the submission contains any of the listed keywords as whole words (e.g. "St Mary's" within a longer sentence)
+- `numeric`: optional. Correct if the submission's only number (digits like "1,850" or words like "eighteen hundred and fifty") is within `±tolerance`
+- Implemented and table-tested in `backend/src/lib/answers.ts`
 
 Safety net:
 - All wrong text attempts are visible in the admin console.

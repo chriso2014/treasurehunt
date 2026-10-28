@@ -1,4 +1,9 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
+import {
+  useState,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from 'react';
 
 // Big, high-contrast controls for one-handed use outdoors.
 
@@ -54,3 +59,18 @@ export const LinkButton = ({ children, onClick }: { children: ReactNode; onClick
     {children}
   </button>
 );
+
+/** An image that disappears instead of showing a broken icon if it can't load (e.g. no signal). */
+export const SafeImage = ({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) => {
+  const [failedSrc, setFailedSrc] = useState<string>();
+  if (failedSrc === src) return null;
+  return <img src={src} alt={alt} className={className} onError={() => setFailedSrc(src)} />;
+};

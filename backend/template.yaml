@@ -305,13 +305,109 @@ Resources:
               Action: [dynamodb:GetItem, dynamodb:Query]
               Resource: !GetAtt GameTable.Arn
             - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for the team photo and content images.
+            - Effect: Allow
               Action: s3:GetObject
-              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
 
   TeamStateLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/${TeamStateFunction}
+      RetentionInDays: 14
+
+  TeamRevealFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-reveal
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/current/reveal
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for the team photo and content images.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
+
+  TeamRevealLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamRevealFunction}
+      RetentionInDays: 14
+
+  TeamAnswerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-answer
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/current/answer
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for the team photo and content images.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
+
+  TeamAnswerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamAnswerFunction}
+      RetentionInDays: 14
+
+  AdminStartGameFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-start-game
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/game/start
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:UpdateItem, dynamodb:Scan, dynamodb:PutItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+
+  AdminStartGameLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminStartGameFunction}
       RetentionInDays: 14
 
 Outputs:

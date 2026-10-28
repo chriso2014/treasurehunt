@@ -1,12 +1,16 @@
 import type { TeamState } from '@treasurehunt/shared';
-import { Button, LinkButton, Screen } from '../components/ui.js';
+import { Button, LinkButton, SafeImage, Screen } from '../components/ui.js';
 
 type Props = { state: TeamState; onChangePhoto: () => void; onSignOut: () => void };
 
 export const Waiting = ({ state, onChangePhoto, onSignOut }: Props) => (
   <Screen title={state.team.name}>
     {state.team.photoUrl && (
-      <img src={state.team.photoUrl} alt="Team photo" className="w-full rounded-2xl object-cover" />
+      <SafeImage
+        src={state.team.photoUrl}
+        alt="Team photo"
+        className="w-full rounded-2xl object-cover"
+      />
     )}
     <p className="text-center text-2xl font-semibold">You’re registered!</p>
     <p className="text-center text-lg text-slate-300">

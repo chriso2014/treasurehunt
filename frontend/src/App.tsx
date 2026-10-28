@@ -5,6 +5,8 @@ import { getAccessToken, signOutTeam } from './auth/index.js';
 import { ErrorMessage, Screen, Button } from './components/ui.js';
 import { errorText } from './lib/errors.js';
 import { usePolling } from './lib/poller.js';
+import { Finished } from './pages/Finished.js';
+import { Play } from './pages/Play.js';
 import { Register } from './pages/Register.js';
 import { SignIn } from './pages/SignIn.js';
 import { TeamPhoto } from './pages/TeamPhoto.js';
@@ -15,7 +17,7 @@ type View =
   | { name: 'register' }
   | { name: 'signin' }
   | { name: 'error'; message: string }
-  | { name: 'team'; state: TeamState; changingPhoto?: boolean };
+  | { name: 'team'; state: TeamState; receivedAt: number; changingPhoto?: boolean };
 
 const WAITING_POLL_MS = 5000;
 
@@ -30,9 +32,11 @@ export const App = () => {
     }
     try {
       const state = await getState();
+      const receivedAt = Date.now();
       setView((v) => ({
         name: 'team',
         state,
+        receivedAt,
         changingPhoto: v.name === 'team' && v.changingPhoto,
       }));
     } catch (err) {
@@ -75,10 +79,22 @@ export const App = () => {
       );
     case 'team': {
       const { state } = view;
+      if (state.team.status === 'finished') return <Finished state={state} />;
+      if (state.team.status === 'playing' && state.current) {
+        return (
+          <Play
+            state={state}
+            receivedAt={view.receivedAt}
+            onState={(next) => setView({ name: 'team', state: next, receivedAt: Date.now() })}
+            onReload={load}
+          />
+        );
+      }
       if (state.game.status !== 'registration') {
         return (
           <Screen title={state.team.name}>
             <p className="text-center text-2xl">The game has started!</p>
+            <Button onClick={() => void load()}>Refresh</Button>
           </Screen>
         );
       }
@@ -87,17 +103,19 @@ export const App = () => {
           <TeamPhoto
             teamName={state.team.name}
             onDone={() => {
-              setView({ name: 'team', state });
+              setView({ ...view, changingPhoto: false });
               void load();
             }}
-            onCancel={view.changingPhoto ? () => setView({ name: 'team', state }) : undefined}
+            onCancel={
+              view.changingPhoto ? () => setView({ ...view, changingPhoto: false }) : undefined
+            }
           />
         );
       }
       return (
         <Waiting
           state={state}
-          onChangePhoto={() => setView({ name: 'team', state, changingPhoto: true })}
+          onChangePhoto={() => setView({ ...view, changingPhoto: true })}
           onSignOut={() => void signOut()}
         />
       );

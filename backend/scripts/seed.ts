@@ -2,8 +2,11 @@
 // Images referenced as content/<name> are uploaded from content/images/<name>.
 //
 //   npm run seed -- dev                      # content/game.private.json
-//   npm run seed -- dev content/game.example.json
+//   npm run seed -- dev content/game.example.json --allow-missing-images
 //   npm run seed -- --check [file]           # validate only, no AWS
+//
+// A referenced image missing from content/images/ is an error (teams would see a broken image),
+// unless --allow-missing-images is given, e.g. for the example file.
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -14,7 +17,8 @@ import { AWS_PROFILE, AWS_REGION, parseEnv, stackOutputs } from '../../scripts/a
 import { contentToItems, staleKeys, type ContentKey } from '../src/lib/content-items.js';
 
 const repoRoot = new URL('../../', import.meta.url).pathname;
-const args = process.argv.slice(2);
+const allowMissingImages = process.argv.includes('--allow-missing-images');
+const args = process.argv.slice(2).filter((a) => a !== '--allow-missing-images');
 const checkOnly = args[0] === '--check';
 const env = checkOnly ? undefined : parseEnv(args[0]);
 const file = resolve(repoRoot, args[1] ?? 'content/game.private.json');
@@ -40,8 +44,13 @@ const missingImages = imageKeys.filter((k) => !existsSync(localImage(k)));
 console.log(
   `${basename(file)} is valid: ${content.questions.length} questions, ${imageKeys.length} images.`,
 );
-for (const key of missingImages)
-  console.warn(`  Warning: ${localImage(key)} not found, not uploaded`);
+for (const key of missingImages) {
+  console.warn(`  ${allowMissingImages ? 'Warning' : 'Error'}: ${localImage(key)} not found`);
+}
+if (missingImages.length > 0 && !allowMissingImages) {
+  console.error('Add the missing images, or pass --allow-missing-images to seed without them.');
+  process.exit(1);
+}
 if (checkOnly || !env) process.exit(0);
 
 process.env.AWS_PROFILE ??= AWS_PROFILE;

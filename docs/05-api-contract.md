@@ -10,6 +10,8 @@ A wrong answer is **not** an error: it returns 200 with `correct: false`.
 
 Every state-changing endpoint returns the updated **`state`** object (below), so the client never has to guess.
 
+Action bodies carry `stage` (the stage the client is acting on): if the team has already moved past it, nothing happens and the current state is returned, so a late retry can't act on the next stage. Submissions also carry `attemptId` (a UUID made once per submission and reused on retries), so a retried answer is counted once.
+
 ## Team: registration
 | Method & path | Auth | Body | Returns |
 |---------------|------|------|---------|
@@ -21,8 +23,8 @@ Every state-changing endpoint returns the updated **`state`** object (below), so
 | Method & path | Body | Effect |
 |---------------|------|--------|
 | `GET /teams/me/state` | none | Current screen data (polled while waiting for start or review) |
-| `POST /teams/me/current/reveal` | none | `clue` → `revealed`, start timer |
-| `POST /teams/me/current/answer` | `{ optionId }` or `{ text }` | Check; wrong: +penalty; correct: complete stage |
+| `POST /teams/me/current/reveal` | `{ stage }` | `clue` → `revealed`, start timer. Returns `state`. Repeating it is harmless |
+| `POST /teams/me/current/answer` | `{ stage, attemptId, optionId }` or `{ stage, attemptId, text }` | Check; wrong: +penalty; correct: complete stage. Returns `{ correct, state }`; `correct` is null if the request was a late retry for a stage already finished |
 | `POST /teams/me/current/hint` | none | +penalty, returns hint (idempotent once used) |
 | `POST /teams/me/current/skip` | none | Requires hint used, not on `video_call`; +penalty; next stage |
 | `POST /teams/me/current/photo-upload` | none | Pre-signed POST for a submission photo |
@@ -51,14 +53,14 @@ Every state-changing endpoint returns the updated **`state`** object (below), so
 }
 ```
 - `team.photoUrl`: pre-signed view URL of the team photo, or null before one is confirmed (the client then asks for a photo).
-- Until the game loop exists (phase 4), `current` is `null` and `completedLocations` is empty.
+- `current` is null before the start and after the team finishes. `current.stage` is the stage number to send with actions.
 - `question` is null until revealed. `hint` is null until used. Correct answers are never included.
 - The client shows a live timer by counting up locally from `elapsedMs`, using `serverTime` to correct clock skew, and re-syncs on every response.
 
 ## Game master (provisional, refined in the admin round)
 | Method & path | Effect |
 |---------------|--------|
-| `POST /admin/game/start` | `registration` → `live`; every team gets stage 1 clue |
+| `POST /admin/game/start` | `registration` → `live`; every registered team gets its stage 1 clue. Returns `{ status: 'live', teamsStarted }`. Safe to repeat (finishes a partial start). Also `npm run start-game -- <env>` |
 | `GET /admin/teams` | Leaderboard: teams, stage, totals, status |
 | `PUT /admin/teams/{teamId}/route` | Override route (before start only) |
 | `GET /admin/reviews` | Pending photo/video submissions (photo pre-signed URLs) |
