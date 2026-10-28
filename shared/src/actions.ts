@@ -11,6 +11,12 @@ const stage = z.number().int().min(1);
 export const revealRequestSchema = z.object({ stage });
 export type RevealRequest = z.infer<typeof revealRequestSchema>;
 
+export const hintRequestSchema = z.object({ stage });
+export type HintRequest = z.infer<typeof hintRequestSchema>;
+
+export const skipRequestSchema = z.object({ stage });
+export type SkipRequest = z.infer<typeof skipRequestSchema>;
+
 export const answerRequestSchema = z.union([
   z.object({ stage, attemptId: z.uuid(), optionId: z.string().min(1) }),
   z.object({ stage, attemptId: z.uuid(), text: z.string().trim().min(1).max(200) }),

@@ -9,6 +9,8 @@ vi.mock('../api/client.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../api/client.js')>()),
   reveal: vi.fn(),
   answer: vi.fn(),
+  hint: vi.fn(),
+  skip: vi.fn(),
 }));
 
 const current = (overrides: Partial<CurrentStage> = {}): CurrentStage => ({
@@ -20,6 +22,8 @@ const current = (overrides: Partial<CurrentStage> = {}): CurrentStage => ({
   hint: null,
   timer: { elapsedMs: 0, running: false, serverTime: '2026-10-28T10:00:00.000Z' },
   penaltyMs: 0,
+  hintPenaltyMs: 300_000,
+  skipPenaltyMs: 300_000,
   hintUsed: false,
   canSkip: false,
   lastResult: null,
@@ -164,6 +168,64 @@ describe('Play', () => {
     await userEvent.type(screen.getByRole('textbox'), ' 1850 ');
     await userEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
     expect(client.answer).toHaveBeenCalledWith(1, expect.any(String), { text: '1850' });
+  });
+
+  it('confirms the hint penalty, then shows the hint', async () => {
+    const onState = vi.fn();
+    const withHint = revealedMc({
+      hintUsed: true,
+      canSkip: true,
+      penaltyMs: 300_000,
+      hint: { text: 'Look up', imageUrl: null },
+    });
+    vi.mocked(client.hint).mockResolvedValue(state(withHint));
+    const { rerender } = render(
+      <Play
+        state={state(revealedMc())}
+        receivedAt={Date.now()}
+        onState={onState}
+        onReload={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: /Skip/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Use hint (+5:00)' }));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('adds 5:00'));
+    expect(client.hint).toHaveBeenCalledWith(1);
+    expect(onState).toHaveBeenCalledWith(state(withHint));
+
+    rerender(
+      <Play state={state(withHint)} receivedAt={Date.now()} onState={onState} onReload={vi.fn()} />,
+    );
+    expect(screen.getByText('Look up')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Use hint/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Skip this question (+5:00)' })).toBeInTheDocument();
+  });
+
+  it('does not use the hint if the team cancels', async () => {
+    vi.mocked(window.confirm).mockReturnValue(false);
+    render(
+      <Play
+        state={state(revealedMc())}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /Use hint/ }));
+    expect(client.hint).not.toHaveBeenCalled();
+  });
+
+  it('confirms the skip penalty, then moves to the next clue', async () => {
+    const onState = vi.fn();
+    const next = state(current({ stage: 2 }));
+    vi.mocked(client.skip).mockResolvedValue(next);
+    const c = revealedMc({ hintUsed: true, canSkip: true, skipPenaltyMs: 600_000 });
+    render(<Play state={state(c)} receivedAt={Date.now()} onState={onState} onReload={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Skip this question (+10:00)' }));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('adds 10:00'));
+    expect(client.skip).toHaveBeenCalledWith(1);
+    expect(onState).toHaveBeenCalledWith(next);
+    expect(await screen.findByRole('status')).toHaveTextContent('Skipped');
   });
 
   it('reloads instead of showing an error when the screen is out of date', async () => {

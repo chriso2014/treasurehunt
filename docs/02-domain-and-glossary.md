@@ -25,7 +25,7 @@
 3. The question timer starts at **Reveal** and stops when the answer is confirmed correct or approved.
 4. The timer is **paused** while a submission is waiting for GM review (types 3 and 4). GM review speed must never affect a team's score.
 5. Every wrong answer or declined submission adds a **penalty**, and the team tries again (except type 4, see below).
-6. Each question has **one hint**. It can be requested at any time after Reveal and adds a **hint penalty**.
+6. Each question has **one hint**. It can be requested at any time after Reveal while the question is open (not while a submission waits for GM review) and adds a **hint penalty**, once.
 6a. After using the hint, a team may **skip** the question. This adds a **skip penalty**, stops the timer, and moves them to the next clue. Skip is not available on the final `video_call` stage.
 6b. There is **no location check** (no GPS or QR). Reveal is available as soon as the clue is shown. Revealing early is the team's own risk, because the timer is running.
 7. After a correct answer the team sees the next clue. The completed location is added to their map.

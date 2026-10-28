@@ -11,7 +11,7 @@ Each phase should fit in one or two Claude sessions and ends with something test
 | 2 | Data + content | `Content` + `Game` tables, assets bucket; `shared/` content schema (zod); `npm run seed -- dev` validates and loads `content/game.example.json`/private file | Done (dev deployed, example content seeded) |
 | 3 | Auth + registration | Cognito pool, `gamemaster` group, `create-gm` script; `POST /teams` (slug, route alternation, rollback); photo upload + confirm; register/sign-in/waiting screens on a phone | Done (tested on a phone on dev) |
 | 4 | Core game loop | `lib/` timer, transitions, answer matching (fully unit-tested); `GET state`, `reveal`, `answer` for dropdown + free text; GM `start` endpoint; clue → question → next clue screens with live timer | Done (played through on a phone on dev) |
-| 5 | Hints + skip | `hint`, `skip` endpoints with rules and penalties; confirm dialogs in the UI | Not started |
+| 5 | Hints + skip | `hint`, `skip` endpoints with rules and penalties; confirm dialogs in the UI | Done (PR open; needs a phone test on dev) |
 | 6 | Photo + dance questions | Submission photo upload, `awaiting_review` pause, WhatsApp link from SSM; team polling while waiting | Not started |
 | 7 | Admin console | `/admin`: leaderboard, review queue with approve/decline + reason, accept text answer, route override, tie-break, publish results; GM polling; public `/results` | Not started |
 | 8 | Map + finished screen | Leaflet map of completed locations; finished screen with total | Not started |

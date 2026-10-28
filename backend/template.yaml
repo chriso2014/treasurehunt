@@ -384,6 +384,70 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${TeamAnswerFunction}
       RetentionInDays: 14
 
+  TeamHintFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-hint
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/current/hint
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for the team photo and content images.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
+
+  TeamHintLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamHintFunction}
+      RetentionInDays: 14
+
+  TeamSkipFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-skip
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/current/skip
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for the team photo and content images.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
+
+  TeamSkipLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamSkipFunction}
+      RetentionInDays: 14
+
   AdminStartGameFunction:
     Type: AWS::Serverless::Function
     Properties:
