@@ -30,7 +30,9 @@ matching?: { maxTypos?, ignoreArticles?, contains?: [string], numeric?: { value,
 hint:      { text?, imageKey? }          // never sent until requested
 penaltyMs?: { wrong?, hint?, skip?, declined? }   // overrides defaultPenaltyMs
 ```
-Images (`imageKey`) live in the private assets bucket under `content/` and are returned as short-lived pre-signed GET URLs.
+Images (`imageKey`, e.g. `content/q2-clue.jpg`) live in the private assets bucket under `content/` and are returned as short-lived pre-signed GET URLs. The seed uploads them from `content/images/<name>` (gitignored).
+
+The file is validated by `gameContentSchema` in `shared/src/content.ts` (field types per question type, unknown fields rejected, both routes cover every question once and end with the single `video_call`).
 
 ## Game table
 | PK | SK | Purpose |

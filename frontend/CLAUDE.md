@@ -19,5 +19,6 @@ Read: `docs/07-frontend.md` (screens, polling, mobile), `docs/05-api-contract.md
 npm run dev -w frontend
 npm test -w frontend
 npm run lint -w frontend
-npm run deploy -w frontend -- dev
+npm run deploy:stack -w frontend -- dev   # S3 + CloudFront stack
+npm run deploy -w frontend -- dev         # build, s3 sync, invalidate
 ```

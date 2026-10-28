@@ -33,9 +33,10 @@ npm install                      # all workspaces
 npm test                         # unit + handler + frontend tests
 npm run lint && npm run typecheck
 npm run dev -w frontend          # local frontend against the dev API
-cd backend && sam build && sam deploy --config-env dev
+npm run deploy -w backend -- dev    # esbuild bundle + sam deploy
+npm run deploy:stack -w frontend -- dev   # S3 + CloudFront stack
 npm run frontend:env -- dev && npm run deploy -w frontend -- dev
-npm run seed -- dev              # load content/game.private.json
+npm run seed -- dev              # validate + load content/game.private.json (--check: validate only)
 npm run e2e:dev                  # full scripted game against dev
 ```
 
@@ -68,4 +69,4 @@ npm run e2e:dev                  # full scripted game against dev
 | `docs/10-testing.md` | Test layers, must-have cases |
 | `docs/11-observability-ops.md` | Logging, alarms, game-day runbook |
 | `docs/roadmap.md` | Phases and status |
-| `docs/decisions/` | ADRs 001–010 (010 = optional cartoon photo, proposed) |
+| `docs/decisions/` | ADRs 001–011 (010 = optional cartoon photo, proposed; 011 = pre-bundled Lambdas) |

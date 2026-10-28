@@ -10,7 +10,7 @@
 ## Cognito User Pool settings
 - Username sign-in, **case-insensitive** usernames.
 - Self sign-up via Cognito **disabled**. Teams are created by the `registerTeam` Lambda (`AdminCreateUser` + `AdminSetUserPassword`), so there are no verification emails or SMS.
-- Password policy: kept light for a fun event (e.g. min 8 chars, no complexity requirements; Cognito minimum is 6).
+- Password policy: min 8 chars, no complexity requirements (`template.yaml`; mirrored by `passwordSchema` in `shared/src/team.ts`).
 - App client: public SPA client (no secret); `USER_SRP_AUTH` + refresh token flow.
 - Token validity: access/ID token 1 hour; refresh token 7 days (covers the event).
 

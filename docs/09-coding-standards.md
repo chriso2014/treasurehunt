@@ -20,7 +20,7 @@ backend/
     handlers/public/      # register.ts, results.ts
     lib/                  # db.ts, state.ts (load/compute), timer.ts, answers.ts (matching),
                           # transitions.ts, s3.ts, auth.ts (claims, group check), http.ts (responses/errors), config.ts
-  scripts/                # seed.ts, create-gm.ts, cleanup.ts, write-frontend-env.ts
+  scripts/                # build.ts, seed.ts, create-gm.ts, cleanup.ts, write-frontend-env.ts
   tests/
 frontend/
   template.yaml           # SAM: S3 bucket + CloudFront (OAC, SPA fallback)
@@ -32,11 +32,12 @@ frontend/
     auth/                 # Amplify Auth wrapper
     lib/poller.ts         # the only place polling happens (ADR-007)
   scripts/deploy.ts       # build, s3 sync, CloudFront invalidation
+scripts/aws.ts            # shared helper for deploy scripts (profile, region, stack outputs)
 content/                  # game.example.json (committed), game.private.json (gitignored)
 ```
 
 ## Backend conventions
-- **One Lambda per route**, bundled by SAM's esbuild builder (`Metadata: BuildMethod: esbuild`).
+- **One Lambda per route**, pre-bundled with esbuild by `npm run build -w backend` (`scripts/build.ts`) into `dist/<group>-<name>/index.mjs`; each function's `CodeUri` points at its folder (ADR-011).
 - Handlers are thin: parse + validate input (zod), get `teamId` from JWT claims, call `lib/` functions, return via `http.ts` helpers. Business rules live in `lib/` as **pure functions** where possible (timer maths, answer matching, transition rules), so they are unit-testable without AWS.
 - Validate all input with **zod** schemas, shared with the frontend via `shared/`.
 - Errors: throw typed `AppError(code, message, status)`; `http.ts` maps them to the error format in `docs/05-api-contract.md`. Unexpected errors → 500 with no internal details.

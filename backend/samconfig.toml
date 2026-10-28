@@ -1,0 +1,25 @@
+version = 0.1
+
+[dev.global.parameters]
+profile = "ChrisOrmerod"
+region = "eu-west-2"
+
+[dev.deploy.parameters]
+stack_name = "treasurehunt-backend-dev"
+resolve_s3 = true
+s3_prefix = "treasurehunt-backend-dev"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+parameter_overrides = "Env=dev AllowedOrigin=https://d13nqxaptk59d6.cloudfront.net"
+
+[prod.global.parameters]
+profile = "ChrisOrmerod"
+region = "eu-west-2"
+
+[prod.deploy.parameters]
+stack_name = "treasurehunt-backend-prod"
+resolve_s3 = true
+s3_prefix = "treasurehunt-backend-prod"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+parameter_overrides = "Env=prod"
