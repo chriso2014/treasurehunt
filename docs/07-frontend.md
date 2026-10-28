@@ -42,7 +42,7 @@ Admin console is in the same app at `/admin`, designed to work on a phone (the G
 - Every action button is disabled while its request is in flight; failed requests retry and then show a clear message.
 
 ## Stack
-React + Vite + TypeScript, Tailwind CSS, `aws-amplify/auth` (v6), Leaflet (plain, no wrapper; circle markers so no marker images). No router: `main.tsx` picks the page by path. See `docs/09-coding-standards.md`.
+React + Vite + TypeScript, Tailwind CSS, `aws-amplify/auth` (v6), Leaflet (plain, no wrapper; circle markers so no marker images, joined by a dashed line in the order found). No router: `main.tsx` picks the page by path. See `docs/09-coding-standards.md`.
 
 ## TBD
 Look & feel: colours, theme, name shown on screen.

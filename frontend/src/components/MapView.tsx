@@ -9,7 +9,7 @@ type Props = {
 };
 
 // Leaflet + OpenStreetMap (ADR-008). Only completed locations are ever sent by the server, so
-// the map can't give away where to go next. Circle markers avoid Leaflet's marker image files.
+// the map can't give away where to go next. Circle markers avoid Leaflet's marker image files; a dashed line joins them in order.
 export const MapView = ({ locations, start }: Props) => {
   const element = useRef<HTMLDivElement>(null);
   // Rebuild only when the places change, not on every poll that brings an equal state.
@@ -26,6 +26,12 @@ export const MapView = ({ locations, start }: Props) => {
 
     // Leaflet takes [lat, lng].
     const points = locations.map((l): [number, number] => [l.lat, l.lng]);
+    // The route so far: straight lines between places in the order they were found.
+    if (points.length > 1) {
+      L.polyline(points, { color: '#fbbf24', weight: 4, opacity: 0.8, dashArray: '8 8' }).addTo(
+        map,
+      );
+    }
     locations.forEach((l, i) => {
       L.circleMarker([l.lat, l.lng], {
         radius: 10,

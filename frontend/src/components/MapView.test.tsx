@@ -11,6 +11,7 @@ vi.mock('leaflet', () => ({
     map: vi.fn(() => map),
     tileLayer: vi.fn(() => layer),
     circleMarker: vi.fn(() => layer),
+    polyline: vi.fn(() => layer),
   },
 }));
 
@@ -21,6 +22,7 @@ describe('MapView', () => {
     render(<MapView locations={[]} start={start} />);
     expect(map.setView).toHaveBeenCalledWith([51.949, -0.28], 15);
     expect(L.circleMarker).not.toHaveBeenCalled();
+    expect(L.polyline).not.toHaveBeenCalled();
   });
 
   it('marks completed locations in [lat, lng] order and fits them', () => {
@@ -31,6 +33,13 @@ describe('MapView', () => {
     render(<MapView locations={locations} start={start} />);
     expect(L.circleMarker).toHaveBeenCalledWith([51.949, -0.281], expect.any(Object));
     expect(layer.bindTooltip).toHaveBeenCalledWith('2. St Mary’s');
+    expect(L.polyline).toHaveBeenCalledWith(
+      [
+        [51.949, -0.281],
+        [51.948, -0.279],
+      ],
+      expect.any(Object),
+    );
     expect(map.fitBounds).toHaveBeenCalledWith(
       [
         [51.949, -0.281],
