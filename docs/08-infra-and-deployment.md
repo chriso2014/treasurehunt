@@ -20,7 +20,7 @@ Domain: default `*.cloudfront.net` address (no custom domain for now).
 - AWS CLI profile **`ChrisOrmerod`** (IAM Identity Center via `aws configure sso`; refresh with `aws sso login --profile ChrisOrmerod`). All CLI/SAM commands use `--profile ChrisOrmerod` (or `AWS_PROFILE=ChrisOrmerod`); `samconfig.toml` sets `profile = "ChrisOrmerod"` and `region = "eu-west-2"`.
 - No manual IAM for the app: SAM creates all Lambda roles from `template.yaml`.
 - Account safety: root MFA on; AWS Budget email alert.
-- Local tools: Node 22, AWS CLI v2, AWS SAM CLI, git (Docker only for `sam local`).
+- Local tools: Node 24 via nvm (`nvm use` reads `.nvmrc`; Lambda and CI stay on Node 22), AWS CLI v2, AWS SAM CLI, git (Docker only for `sam local`).
 - Check access: `aws sts get-caller-identity --profile ChrisOrmerod`.
 
 ## Deploy (from your machine)
