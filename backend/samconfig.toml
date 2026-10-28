@@ -22,4 +22,4 @@ resolve_s3 = true
 s3_prefix = "treasurehunt-backend-prod"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-parameter_overrides = "Env=prod AlarmEmailParam=/treasurehunt/prod/alarm-email"
+parameter_overrides = "Env=prod AllowedOrigin=https://drhz1dw4wys2c.cloudfront.net AlarmEmailParam=/treasurehunt/prod/alarm-email"

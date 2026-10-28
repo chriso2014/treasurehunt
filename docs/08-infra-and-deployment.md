@@ -10,6 +10,11 @@ Environments: **`dev`** (build and test) and **`prod`** (the event), in the same
 
 Domain: default `*.cloudfront.net` address (no custom domain for now).
 
+| Env | Site |
+|-----|------|
+| dev | https://d13nqxaptk59d6.cloudfront.net |
+| prod | https://drhz1dw4wys2c.cloudfront.net |
+
 ## Cross-stack config
 - Backend stack outputs: `ApiUrl`, `UserPoolId`, `UserPoolClientId`, `Region`, `ContentTable`, `GameTable`, `AssetsBucket`.
 - `npm run frontend:env -- <env>` reads these outputs and writes `frontend/.env.<env>` (gitignored): `VITE_ENV`, `VITE_API_URL`, `VITE_REGION`, `VITE_USER_POOL_ID`, `VITE_USER_POOL_CLIENT_ID`.
