@@ -7,7 +7,7 @@ import { db } from '../../lib/aws.js';
 import { clock } from '../../lib/clock.js';
 import { config } from '../../lib/config.js';
 import { getContentConfig, getQuestion, getRoute, penaltyFor } from '../../lib/content.js';
-import { attemptKey, stageKey, type AttemptItem } from '../../lib/game.js';
+import { attemptKey, loadTeam, stageKey, type AttemptItem } from '../../lib/game.js';
 import { AppError, json, parseBody, route } from '../../lib/http.js';
 import { logger } from '../../lib/logger.js';
 import { completeStageItems } from '../../lib/progress.js';
@@ -105,9 +105,14 @@ export const handler = route(async (event: AuthedEvent) => {
     });
   } catch (err) {
     if (!isLostRace(err)) throw err;
-    // Another request got there first: report whatever is stored now.
+    // Another request got there first. If it was this same submission (a double tap or a
+    // retry racing the original), answer from the stored attempt; else report the state.
+    const stored = (await loadTeam(teamId)).attempts.find((a) => a.attemptId === body.attemptId);
     const state = await loadState(teamId);
-    const response: AnswerResponse = { correct: null, state };
+    const response: AnswerResponse = {
+      correct: stored ? stored.result === 'correct' : null,
+      state,
+    };
     return json(200, response);
   }
 

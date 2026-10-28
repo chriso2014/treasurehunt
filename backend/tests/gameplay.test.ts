@@ -225,6 +225,23 @@ describe('POST /teams/me/current/answer', () => {
     expect(res.body.correct).toBeNull();
   });
 
+  it('answers a double tap that lost the race from the stored attempt', async () => {
+    given(revealed());
+    db.on(QueryCommand)
+      .resolvesOnce({ Items: teamItems(revealed()) })
+      .resolves({
+        Items: teamItems({ ...revealed(), attempts: [attempt({ attemptId: ATTEMPT })] }),
+      });
+    db.on(TransactWriteCommand).rejects(
+      new TransactionCanceledException({ message: 'cancelled', $metadata: {} }),
+    );
+    const res = parse(
+      await answer(teamEvent('team-1', { stage: 1, attemptId: ATTEMPT, optionId: 'a' })),
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.correct).toBe(false);
+  });
+
   it('refuses an answer before Reveal', async () => {
     given(record());
     const res = parse(
