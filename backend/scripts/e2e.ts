@@ -76,6 +76,7 @@ const call = async (
   const text = await res.text();
   return { status: res.status, body: text ? (JSON.parse(text) as unknown) : null };
 };
+const rawOf = new WeakMap<object, string>();
 const ok = async <T extends z.ZodType>(
   schema: T,
   method: 'GET' | 'POST',
@@ -84,7 +85,10 @@ const ok = async <T extends z.ZodType>(
 ): Promise<z.infer<T>> => {
   const r = await call(method, path, opts);
   if (r.status >= 300) throw new Error(`${method} ${path}: ${r.status} ${JSON.stringify(r.body)}`);
-  return schema.parse(r.body);
+  const parsed = schema.parse(r.body) as z.infer<T>;
+  // Parsing drops unknown fields, so leak checks look at the raw body.
+  if (parsed && typeof parsed === 'object') rawOf.set(parsed, JSON.stringify(r.body));
+  return parsed;
 };
 const errorCode = (r: Reply) => (r.body as { error?: { code?: string } } | null)?.error?.code;
 
@@ -166,11 +170,18 @@ const stateOf = (team: Team) =>
   ok(teamStateSchema, 'GET', '/teams/me/state', { token: team.token });
 const act = (team: Team, action: string, body: unknown) =>
   ok(teamStateSchema, 'POST', `/teams/me/current/${action}`, { token: team.token, body });
-const both = <T>(a: Promise<T>, b: Promise<T>) => Promise.all([a, b]);
+/** Waits for every request to finish before failing, so cleanup never races a request. */
+const settled = async <T>(promises: Promise<T>[]): Promise<T[]> => {
+  const results = await Promise.allSettled(promises);
+  const failed = results.find((r) => r.status === 'rejected');
+  if (failed) throw failed.reason;
+  return results.map((r) => (r as PromiseFulfilledResult<T>).value);
+};
+const both = <T>(a: Promise<T>, b: Promise<T>) => settled([a, b]) as Promise<[T, T]>;
 
 /** Nothing the team hasn't earned may be in the state (CLAUDE.md core rules). */
 const checkNoLeaks = (state: TeamState, question: Question, visited: string[]) => {
-  const text = JSON.stringify(state);
+  const text = rawOf.get(state) ?? JSON.stringify(state);
   check(!/correctOptionId|acceptedAnswers|matching/.test(text), 'state has no answer fields');
   if (!state.current?.hintUsed && question.hint.text) {
     const shown = `${question.clue.text ?? ''} ${question.question.text}`;
@@ -184,13 +195,23 @@ const checkNoLeaks = (state: TeamState, question: Question, visited: string[]) =
   );
 };
 
-const review = async (team: Team, decision: 'approved' | 'declined', reason?: string) => {
-  const { reviews } = await ok(adminReviewsResponseSchema, 'GET', '/admin/reviews', {
-    token: gmToken,
-  });
-  const item = reviews.find((r) => r.teamId === team.teamId);
-  check(item !== undefined, `${team.name}'s submission is in the review queue`);
-  const path = `/admin/reviews/${team.teamId}/${item!.attemptId}`;
+const review = async (
+  team: Team,
+  attemptId: string,
+  decision: 'approved' | 'declined',
+  reason?: string,
+) => {
+  // The queue is a GSI (eventually consistent): poll briefly for this exact submission.
+  let queued = false;
+  for (let i = 0; i < 20 && !queued; i++) {
+    if (i > 0) await sleep(500);
+    const { reviews } = await ok(adminReviewsResponseSchema, 'GET', '/admin/reviews', {
+      token: gmToken,
+    });
+    queued = reviews.some((r) => r.teamId === team.teamId && r.attemptId === attemptId);
+  }
+  check(queued, `${team.name}'s submission is in the review queue`);
+  const path = `/admin/reviews/${team.teamId}/${attemptId}`;
   const body = { decision, reason };
   const [a, b] = await both(
     ok(adminActionResponseSchema, 'POST', path, { token: gmToken, body }),
@@ -199,7 +220,10 @@ const review = async (team: Team, decision: 'approved' | 'declined', reason?: st
   check(a.applied !== b.applied, 'a double-tapped review decision is applied once');
 };
 
-const sendPhoto = async (team: Team, stage: number): Promise<TeamState> => {
+const sendPhoto = async (
+  team: Team,
+  stage: number,
+): Promise<{ state: TeamState; attemptId: string }> => {
   const attemptId = randomUUID();
   const upload = await ok(photoUploadResponseSchema, 'POST', '/teams/me/current/photo-upload', {
     token: team.token,
@@ -210,7 +234,7 @@ const sendPhoto = async (team: Team, stage: number): Promise<TeamState> => {
     act(team, 'photo', { stage, attemptId }),
     act(team, 'photo', { stage, attemptId }),
   );
-  return state;
+  return { state, attemptId };
 };
 
 /** Plays one stage; returns the penalties expected on it. */
@@ -282,7 +306,7 @@ const playStage = async (
       return { ms: expected, outcome: 'skipped' };
     }
     case 'photo': {
-      const waiting = await sendPhoto(team, stage);
+      const { state: waiting, attemptId } = await sendPhoto(team, stage);
       check(waiting.current?.status === 'awaiting_review', 'photo waits for review');
       check(waiting.current?.timer.running === false, 'timer pauses during review');
       const pausedAt = waiting.current!.timer.elapsedMs;
@@ -290,7 +314,7 @@ const playStage = async (
       const still = await stateOf(team);
       check(still.current?.timer.elapsedMs === pausedAt, 'no time accrues while awaiting review');
       if (plan === 'careful') {
-        await review(team, 'declined', 'e2e: not everyone is in shot');
+        await review(team, attemptId, 'declined', 'e2e: not everyone is in shot');
         const declined = await stateOf(team);
         check(declined.current?.status === 'revealed', 'declined photo reopens the question');
         check(declined.current?.timer.running === true, 'timer resumes after a decline');
@@ -299,9 +323,11 @@ const playStage = async (
           'team sees the decline reason',
         );
         expected += p('declined');
-        await sendPhoto(team, stage);
+        const again = await sendPhoto(team, stage);
+        await review(team, again.attemptId, 'approved');
+        return { ms: expected, outcome: 'approved' };
       }
-      await review(team, 'approved');
+      await review(team, attemptId, 'approved');
       return { ms: expected, outcome: 'approved' };
     }
     case 'video_call': {
@@ -318,10 +344,10 @@ const playStage = async (
       check(waiting.current?.status === 'awaiting_review', 'dance call waits for the GM');
       if (!waiting.current?.whatsappUrl) step('note: no WhatsApp link (SSM number not set on dev)');
       if (plan === 'careful') {
-        await review(team, 'approved');
+        await review(team, attemptId, 'approved');
         return { ms: expected, outcome: 'approved' };
       }
-      await review(team, 'declined', 'e2e: more energy');
+      await review(team, attemptId, 'declined', 'e2e: more energy');
       expected += p('declined');
       return { ms: expected, outcome: 'declined' };
     }
@@ -398,7 +424,7 @@ const run = async () => {
   const late = await call('POST', '/teams', { body: { name: 'E2E Late', password: 'password1' } });
   check(late.status === 409, 'registration closes at the start');
 
-  const [alphaTotal, bravoTotal] = await Promise.all([
+  const [alphaTotal, bravoTotal] = await settled([
     playTeam(alpha, 'careful'),
     playTeam(bravo, 'struggling'),
   ]);

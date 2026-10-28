@@ -76,6 +76,13 @@ describe('resetGame', () => {
     ]);
   });
 
+  it('fails when S3 reports photos it could not delete', async () => {
+    s3.on(DeleteObjectsCommand).resolves({
+      Errors: [{ Key: 'teams/t1/team-photo.jpg', Code: 'AccessDenied' }],
+    });
+    await expect(resetGame()).rejects.toThrow('1 photo(s) not deleted');
+  });
+
   it('retries deletes DynamoDB leaves unprocessed', async () => {
     db.on(BatchWriteCommand)
       .resolvesOnce({

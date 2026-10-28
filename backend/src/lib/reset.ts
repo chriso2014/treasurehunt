@@ -118,12 +118,16 @@ export const resetGame = async ({ dryRun = false } = {}): Promise<ResetSummary> 
     await cognito.send(new AdminDeleteUserCommand({ UserPoolId: config.userPoolId, Username }));
   }
   for (const chunk of chunks(photos, 1000)) {
-    await s3.send(
+    const res = await s3.send(
       new DeleteObjectsCommand({
         Bucket: config.assetsBucket,
         Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
       }),
     );
+    // DeleteObjects succeeds as a call even when some objects fail.
+    if (res.Errors?.length) {
+      throw new Error(`${res.Errors.length} photo(s) not deleted, e.g. ${res.Errors[0]!.Key}`);
+    }
   }
   return summary;
 };
