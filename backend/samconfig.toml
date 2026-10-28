@@ -10,7 +10,7 @@ resolve_s3 = true
 s3_prefix = "treasurehunt-backend-dev"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = false
-parameter_overrides = "Env=dev"
+parameter_overrides = "Env=dev AllowedOrigin=https://d13nqxaptk59d6.cloudfront.net"
 
 [prod.global.parameters]
 profile = "ChrisOrmerod"

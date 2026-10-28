@@ -35,7 +35,7 @@ npm run frontend:env -- dev && npm run deploy -w frontend -- dev   # vite build,
 npm run seed -- dev            # loads content/game.private.json
 npm run create-gm -- dev       # creates the GM user in the gamemaster group (prompts for password)
 ```
-First deploy order: backend → frontend stack → frontend app → re-deploy backend with `AllowedOrigin` (`npm run deploy -w backend -- dev --parameter-overrides Env=dev AllowedOrigin=https://<id>.cloudfront.net`) → seed → create GM.
+First deploy order: backend → frontend stack → frontend app → set `AllowedOrigin=<SiteUrl>` in that env's `parameter_overrides` in `backend/samconfig.toml` and re-deploy the backend (a deploy without it resets CORS to localhost only) → seed → create GM.
 
 ## CI (GitHub Actions)
 - On every push/PR: install, lint, type-check, `npm test`. No AWS credentials in CI; deploys stay manual.

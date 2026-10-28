@@ -31,14 +31,21 @@ Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      CorsConfiguration:
-        AllowOrigins: !If
-          - HasAllowedOrigin
-          - !If [IsDev, [!Ref AllowedOrigin, 'http://localhost:5173'], [!Ref AllowedOrigin]]
-          - ['http://localhost:5173']
-        AllowMethods: [GET, POST, OPTIONS]
-        AllowHeaders: [authorization, content-type]
-        MaxAge: 600
+      # SAM drops the rest of CorsConfiguration if AllowOrigins is an !If, so each branch
+      # carries the full config.
+      CorsConfiguration: !If
+        - IsDev
+        - AllowOrigins: !If
+            - HasAllowedOrigin
+            - [!Ref AllowedOrigin, 'http://localhost:5173']
+            - ['http://localhost:5173']
+          AllowMethods: [GET, POST, OPTIONS]
+          AllowHeaders: [authorization, content-type]
+          MaxAge: 600
+        - AllowOrigins: [!Ref AllowedOrigin]
+          AllowMethods: [GET, POST, OPTIONS]
+          AllowHeaders: [authorization, content-type]
+          MaxAge: 600
 
   # Handlers are pre-bundled by `npm run build` (scripts/build.ts) into dist/<group>-<name>/.
   HealthFunction:
