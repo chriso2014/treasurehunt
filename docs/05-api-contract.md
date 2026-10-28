@@ -49,7 +49,9 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
     "lastResult": { "result": "declined", "reason": "Whole team must be in shot" },
     "whatsappUrl": null
   },
-  "completedLocations": [ { "name": "...", "lat": 51.95, "lng": -0.28 } ]
+  "completedLocations": [ { "name": "...", "lat": 51.95, "lng": -0.28 } ],
+  "results": [ { "stage": 1, "outcome": "correct", "timeMs": 192000, "penaltyMs": 300000,
+                 "penalties": [ { "kind": "wrong", "count": 1, "ms": 300000 } ] } ]
 }
 ```
 - `team.photoUrl`: pre-signed view URL of the team photo, or null before one is confirmed (the client then asks for a photo).

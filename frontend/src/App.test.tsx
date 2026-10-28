@@ -32,6 +32,7 @@ const state = (overrides: Partial<TeamState['team']> = {}, game = 'registration'
   },
   current: null,
   completedLocations: [],
+  results: [],
 });
 
 beforeEach(() => {

@@ -64,6 +64,7 @@ const state = (c: CurrentStage | null, totalMs = 0): TeamState => ({
   },
   current: c,
   completedLocations: [],
+  results: [],
 });
 
 describe('Play', () => {

@@ -138,3 +138,53 @@ describe('buildState whatsappUrl', () => {
     expect((await build({ whatsappUrl: 'https://wa.me/1' })).current?.whatsappUrl).toBeNull();
   });
 });
+
+describe('buildState results', () => {
+  it('breaks each finished stage into time and penalties by cause', async () => {
+    const state = await build({
+      record: record({
+        profile: profile({ status: 'finished', totalActiveMs: 180_000, totalPenaltyMs: 960_000 }),
+        stages: [
+          stage({ status: 'completed', outcome: 'correct', activeMs: 120_000 }),
+          stage({
+            stage: 2,
+            questionId: 'q2',
+            status: 'skipped',
+            outcome: 'skipped',
+            skipped: true,
+            hintUsed: true,
+            wrongAttempts: 1,
+            activeMs: 60_000,
+            penaltyMs: 660_000,
+          }),
+        ],
+      }),
+    });
+    expect(state.results).toEqual([
+      { stage: 1, outcome: 'correct', timeMs: 120_000, penaltyMs: 0, penalties: [] },
+      {
+        stage: 2,
+        outcome: 'skipped',
+        timeMs: 60_000,
+        penaltyMs: 660_000,
+        penalties: [
+          { kind: 'wrong', count: 1, ms: 60_000 },
+          { kind: 'hint', count: 1, ms: 300_000 },
+          { kind: 'skip', count: 1, ms: 300_000 },
+        ],
+      },
+    ]);
+  });
+
+  it('counts a declined dance as one decline', async () => {
+    const state = await build({
+      record: record({
+        profile: profile({ status: 'finished' }),
+        stages: [
+          stage({ questionId: 'q4', status: 'completed', outcome: 'declined', penaltyMs: 300_000 }),
+        ],
+      }),
+    });
+    expect(state.results[0]!.penalties).toEqual([{ kind: 'declined', count: 1, ms: 300_000 }]);
+  });
+});

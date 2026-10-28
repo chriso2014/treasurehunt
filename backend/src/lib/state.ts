@@ -1,5 +1,11 @@
-import type { GameContent, GameStatus, Question, TeamState } from '@treasurehunt/shared';
-import { getGameStatus, loadTeam, type TeamRecord } from './game.js';
+import type {
+  GameContent,
+  GameStatus,
+  Question,
+  StageResult,
+  TeamState,
+} from '@treasurehunt/shared';
+import { getGameStatus, loadTeam, type StageItem, type TeamRecord } from './game.js';
 import { getContentConfig, getQuestion, getRoute, penaltyFor } from './content.js';
 import { clock } from './clock.js';
 import { viewUrl } from './s3.js';
@@ -25,6 +31,32 @@ export type StateInput = {
 
 const optionalUrl = (signUrl: StateInput['signUrl'], key: string | undefined) =>
   key ? signUrl(key) : Promise.resolve(null);
+
+/** Splits a finished stage's penalty into its causes; anything left over (e.g. content changed). */
+const stageResult = (
+  s: StageItem,
+  question: Question | undefined,
+  contentConfig: GameContent['config'],
+): StageResult => {
+  const each = (kind: 'wrong' | 'declined' | 'hint' | 'skip') =>
+    question ? penaltyFor(kind, question, contentConfig) : contentConfig.defaultPenaltyMs;
+  const declines = s.declines + (s.outcome === 'declined' ? 1 : 0);
+  const penalties: StageResult['penalties'] = [
+    { kind: 'wrong' as const, count: s.wrongAttempts, ms: s.wrongAttempts * each('wrong') },
+    { kind: 'declined' as const, count: declines, ms: declines * each('declined') },
+    { kind: 'hint' as const, count: s.hintUsed ? 1 : 0, ms: s.hintUsed ? each('hint') : 0 },
+    { kind: 'skip' as const, count: s.skipped ? 1 : 0, ms: s.skipped ? each('skip') : 0 },
+  ].filter((p) => p.count > 0);
+  const rest = s.penaltyMs - penalties.reduce((sum, p) => sum + p.ms, 0);
+  if (rest !== 0) penalties.push({ kind: 'other', count: 1, ms: rest });
+  return {
+    stage: s.stage,
+    outcome: s.outcome ?? (s.skipped ? 'skipped' : 'correct'),
+    timeMs: s.activeMs,
+    penaltyMs: s.penaltyMs,
+    penalties,
+  };
+};
 
 export const buildState = async (input: StateInput): Promise<TeamState> => {
   const { gameStatus, record, stageCount, contentConfig, questions, now, signUrl } = input;
@@ -106,6 +138,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
     },
     current,
     completedLocations,
+    results: done.map((s) => stageResult(s, questions.get(s.questionId), contentConfig)),
   };
 };
 

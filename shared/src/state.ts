@@ -62,6 +62,23 @@ export const currentStageSchema = z.object({
 });
 export type CurrentStage = z.infer<typeof currentStageSchema>;
 
+/** One finished stage on the end screen's "See more about your time". */
+export const stageResultSchema = z.object({
+  stage: z.number().int(),
+  outcome: z.enum(['correct', 'approved', 'declined', 'skipped', 'gm_accepted']),
+  /** Time the clock ran, excluding penalties. */
+  timeMs: z.number(),
+  penaltyMs: z.number(),
+  penalties: z.array(
+    z.object({
+      kind: z.enum(['wrong', 'declined', 'hint', 'skip', 'other']),
+      count: z.number().int(),
+      ms: z.number(),
+    }),
+  ),
+});
+export type StageResult = z.infer<typeof stageResultSchema>;
+
 export const teamStateSchema = z.object({
   game: z.object({ status: gameStatusSchema }),
   team: z.object({
@@ -77,5 +94,7 @@ export const teamStateSchema = z.object({
   /** Null before the start and after finishing. */
   current: currentStageSchema.nullable(),
   completedLocations: z.array(z.object({ name: z.string(), lat: z.number(), lng: z.number() })),
+  /** Finished stages in order, for the breakdown of the team's time. */
+  results: z.array(stageResultSchema),
 });
 export type TeamState = z.infer<typeof teamStateSchema>;
