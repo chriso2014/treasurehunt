@@ -32,6 +32,7 @@ const state = (overrides: Partial<TeamState['team']> = {}, game = 'registration'
   },
   current: null,
   completedLocations: [],
+  map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
   results: [],
 });
 

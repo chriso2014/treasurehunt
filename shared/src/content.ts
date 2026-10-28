@@ -9,11 +9,20 @@ const imageKey = z
 
 const image = { imageKey: imageKey.optional() };
 
-const location = z.strictObject({
-  name: z.string().min(1),
-  lat: z.number().min(-90).max(90),
-  lng: z.number().min(-180).max(180),
-});
+/** Roughly Hitchin: catches typos and swapped or missing minus signs (ADR-008). */
+export const HITCHIN_BOUNDS = { minLat: 51.93, maxLat: 51.97, minLng: -0.31, maxLng: -0.25 };
+const inHitchin = (p: { lat: number; lng: number }) =>
+  p.lat >= HITCHIN_BOUNDS.minLat &&
+  p.lat <= HITCHIN_BOUNDS.maxLat &&
+  p.lng >= HITCHIN_BOUNDS.minLng &&
+  p.lng <= HITCHIN_BOUNDS.maxLng;
+const inHitchinMessage = 'must be in Hitchin (lat 51.93 to 51.97, lng -0.31 to -0.25)';
+
+const point = z.strictObject({ lat: z.number(), lng: z.number() });
+
+const location = z
+  .strictObject({ name: z.string().min(1), lat: z.number(), lng: z.number() })
+  .refine(inHitchin, inHitchinMessage);
 
 const clue = z
   .strictObject({ text: z.string().min(1).optional(), ...image })
@@ -95,7 +104,7 @@ export const gameContentSchema = z
       title: z.string().min(1),
       defaultPenaltyMs: durationMs,
       map: z.strictObject({
-        centre: z.strictObject({ lat: z.number(), lng: z.number() }),
+        centre: point.refine(inHitchin, inHitchinMessage),
         zoom: z.number().int().min(1).max(20),
       }),
     }),

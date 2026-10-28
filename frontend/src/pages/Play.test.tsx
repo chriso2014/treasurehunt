@@ -16,6 +16,14 @@ vi.mock('../api/client.js', async (importOriginal) => ({
   submitPhoto: vi.fn(),
   videoCall: vi.fn(),
 }));
+vi.mock('../components/MapView.js', () => ({
+  MapView: ({ locations }: { locations: unknown[] }) => (
+    <div
+      role="img"
+      aria-label={`Map of ${locations.length} place${locations.length === 1 ? '' : 's'} you’ve found`}
+    />
+  ),
+}));
 vi.mock('../lib/image.js', () => ({ resizeToJpeg: vi.fn(async () => new Blob(['jpg'])) }));
 
 const current = (overrides: Partial<CurrentStage> = {}): CurrentStage => ({
@@ -64,6 +72,7 @@ const state = (c: CurrentStage | null, totalMs = 0): TeamState => ({
   },
   current: c,
   completedLocations: [],
+  map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
   results: [],
 });
 
@@ -364,5 +373,18 @@ describe('SafeImage', () => {
     );
     fireEvent.error(screen.getByAltText('Clue'));
     expect(screen.queryByAltText('Clue')).not.toBeInTheDocument();
+  });
+});
+
+describe('Play map', () => {
+  it('shows the map of found places only when asked', async () => {
+    const s = {
+      ...state(current({ stage: 2 })),
+      completedLocations: [{ name: 'Market Place', lat: 51.949, lng: -0.281 }],
+    };
+    render(<Play state={s} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />);
+    expect(screen.queryByRole('img', { name: /Map of/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Map of places you’ve found (1)' }));
+    expect(screen.getByRole('img', { name: 'Map of 1 place you’ve found' })).toBeInTheDocument();
   });
 });

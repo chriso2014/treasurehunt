@@ -27,6 +27,14 @@ describe('gameContentSchema', () => {
     ]);
   });
 
+  it('rejects a location outside Hitchin, e.g. a missing minus sign', () => {
+    const content = example();
+    content.questions[0]!.location.lng = 0.28;
+    expect(issues(content)).toEqual([
+      'questions.0.location: must be in Hitchin (lat 51.93 to 51.97, lng -0.31 to -0.25)',
+    ]);
+  });
+
   it('rejects a free text question with no accepted answers', () => {
     const content = example();
     const q = content.questions[1];
