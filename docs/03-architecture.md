@@ -72,7 +72,7 @@ Team-facing fields: **team name**, **password**, **team photo** (taken with the 
 ## GM review flow: photo and dance (agreed, ADR-009)
 Direct API + DynamoDB; no Step Functions.
 
-1. **Submit.** Photo: the client resizes and uploads to S3 (`teams/{teamId}/submissions/{stage}-{timestamp}.jpg`) via pre-signed POST, then `POST /teams/me/current/photo {key}`. Dance: the team taps the WhatsApp button, which calls `POST /teams/me/current/video-call` and then opens `https://wa.me/<GM number>`.
+1. **Submit.** Photo: the client resizes and uploads to S3 (`teams/{teamId}/submissions/{stage}-{attemptId}.jpg`, key chosen by the server) via `POST /teams/me/current/photo-upload {stage, attemptId}`, then `POST /teams/me/current/photo {stage, attemptId}`. Dance: the team taps the WhatsApp button, which calls `POST /teams/me/current/video-call` and then opens `https://wa.me/<GM number>`.
 2. **Pause.** Lambda, in one conditional write (status must be `revealed`): `activeMs += now - runningSince`, remove `runningSince`, status → `awaiting_review`, put a `pending` attempt (appears in the `REVIEW#PENDING` GSI).
 3. **Team waits.** "Waiting for game master…" with frozen timer; polls `GET /teams/me/state` every 3 s.
 4. **GM reviews.** `/admin` polls `GET /admin/reviews` every 5 s; shows team, question text and the photo (pre-signed GET) or "dance call". GM taps Approve, or Decline with an optional reason.

@@ -11,7 +11,12 @@ vi.mock('../api/client.js', async (importOriginal) => ({
   answer: vi.fn(),
   hint: vi.fn(),
   skip: vi.fn(),
+  getSubmissionUpload: vi.fn(),
+  uploadToS3: vi.fn(),
+  submitPhoto: vi.fn(),
+  videoCall: vi.fn(),
 }));
+vi.mock('../lib/image.js', () => ({ resizeToJpeg: vi.fn(async () => new Blob(['jpg'])) }));
 
 const current = (overrides: Partial<CurrentStage> = {}): CurrentStage => ({
   stage: 1,
@@ -59,6 +64,7 @@ const state = (c: CurrentStage | null, totalMs = 0): TeamState => ({
   },
   current: c,
   completedLocations: [],
+  results: [],
 });
 
 describe('Play', () => {
@@ -226,6 +232,106 @@ describe('Play', () => {
     expect(client.skip).toHaveBeenCalledWith(1);
     expect(onState).toHaveBeenCalledWith(next);
     expect(await screen.findByRole('status')).toHaveTextContent('Skipped');
+  });
+
+  describe('photo questions', () => {
+    const photoQ = (overrides: Partial<CurrentStage> = {}) =>
+      revealedMc({
+        type: 'photo',
+        question: { text: 'Troll faces on the bridge', imageUrl: null, options: null },
+        ...overrides,
+      });
+
+    it('uploads the photo, submits it and shows the new state', async () => {
+      URL.createObjectURL = vi.fn(() => 'blob:preview');
+      URL.revokeObjectURL = vi.fn();
+      const upload = { url: 'https://s3', fields: {}, key: 'k' };
+      vi.mocked(client.getSubmissionUpload).mockResolvedValue(upload);
+      vi.mocked(client.uploadToS3).mockResolvedValue();
+      const waiting = state(photoQ({ status: 'awaiting_review' }));
+      vi.mocked(client.submitPhoto).mockResolvedValue(waiting);
+      const onState = vi.fn();
+      render(
+        <Play
+          state={state(photoQ())}
+          receivedAt={Date.now()}
+          onState={onState}
+          onReload={vi.fn()}
+        />,
+      );
+      await userEvent.upload(
+        screen.getByTestId('answer-photo-input'),
+        new File(['x'], 'p.jpg', { type: 'image/jpeg' }),
+      );
+      await userEvent.click(await screen.findByRole('button', { name: 'Send photo' }));
+      const [stage, attemptId] = vi.mocked(client.getSubmissionUpload).mock.calls[0]!;
+      expect(stage).toBe(1);
+      expect(client.uploadToS3).toHaveBeenCalledWith(upload, expect.any(Blob));
+      expect(client.submitPhoto).toHaveBeenCalledWith(1, attemptId);
+      expect(onState).toHaveBeenCalledWith(waiting);
+    });
+
+    it('shows the paused timer while the game master reviews', () => {
+      const c = photoQ({
+        status: 'awaiting_review',
+        timer: { elapsedMs: 90_000, running: false, serverTime: '' },
+      });
+      render(
+        <Play state={state(c)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />,
+      );
+      expect(screen.getByRole('status')).toHaveTextContent('Waiting for the game master');
+      expect(screen.queryByRole('button', { name: /Use hint/ })).not.toBeInTheDocument();
+    });
+
+    it('shows why a photo was declined', () => {
+      const c = photoQ({
+        penaltyMs: 300_000,
+        lastResult: { result: 'declined', reason: 'Whole team must be in shot' },
+      });
+      render(
+        <Play state={state(c)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />,
+      );
+      expect(screen.getByRole('alert')).toHaveTextContent('Whole team must be in shot');
+      expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument();
+    });
+  });
+
+  describe('the dance', () => {
+    const dance = (overrides: Partial<CurrentStage> = {}) =>
+      revealedMc({
+        type: 'video_call',
+        question: { text: 'Dance!', imageUrl: null, options: null },
+        ...overrides,
+      });
+
+    it('pauses the timer when the team is ready to call', async () => {
+      const onState = vi.fn();
+      vi.mocked(client.videoCall).mockResolvedValue(state(dance({ status: 'awaiting_review' })));
+      render(
+        <Play
+          state={state(dance())}
+          receivedAt={Date.now()}
+          onState={onState}
+          onReload={vi.fn()}
+        />,
+      );
+      expect(screen.queryByRole('button', { name: /Skip/ })).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Call the game master' }));
+      expect(window.confirm).toHaveBeenCalled();
+      expect(client.videoCall).toHaveBeenCalledWith(1, expect.any(String));
+      expect(onState).toHaveBeenCalled();
+    });
+
+    it('links to WhatsApp while waiting for the decision', () => {
+      const c = dance({ status: 'awaiting_review', whatsappUrl: 'https://wa.me/447700900123' });
+      render(
+        <Play state={state(c)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />,
+      );
+      expect(screen.getByRole('link', { name: 'Open WhatsApp' })).toHaveAttribute(
+        'href',
+        'https://wa.me/447700900123',
+      );
+    });
   });
 
   it('reloads instead of showing an error when the screen is out of date', async () => {

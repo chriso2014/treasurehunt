@@ -14,7 +14,11 @@ Domain: default `*.cloudfront.net` address (no custom domain for now).
 - Backend stack outputs: `ApiUrl`, `UserPoolId`, `UserPoolClientId`, `Region`, `ContentTable`, `GameTable`, `AssetsBucket`.
 - `npm run frontend:env -- <env>` reads these outputs and writes `frontend/.env.<env>` (gitignored): `VITE_ENV`, `VITE_API_URL`, `VITE_REGION`, `VITE_USER_POOL_ID`, `VITE_USER_POOL_CLIENT_ID`.
 - Backend needs the frontend's CloudFront URL for CORS: passed as a SAM parameter `AllowedOrigin` (set after the first frontend deploy).
-- SSM parameters under `/treasurehunt/<env>/`: `gm-whatsapp-number`, `default-penalty-ms`.
+- SSM parameter `/treasurehunt/<env>/gm-whatsapp-number` (String, international format). Created by hand so the number never reaches the repo; Lambdas read it (cached 5 min) to build the `wa.me` link on the dance stage. Without it the dance still works, but there's no button to open WhatsApp:
+  ```bash
+  aws ssm put-parameter --name /treasurehunt/dev/gm-whatsapp-number --type String --value '+44…' --overwrite --profile ChrisOrmerod
+  ```
+- Penalty defaults live in the content file (`config.defaultPenaltyMs`), not SSM.
 
 ## Developer access & prerequisites
 - AWS CLI profile **`ChrisOrmerod`** (IAM Identity Center via `aws configure sso`; refresh with `aws sso login --profile ChrisOrmerod`). All CLI/SAM commands use `--profile ChrisOrmerod` (or `AWS_PROFILE=ChrisOrmerod`); `samconfig.toml` sets `profile = "ChrisOrmerod"` and `region = "eu-west-2"`.
@@ -35,6 +39,7 @@ npm run frontend:env -- dev && npm run deploy -w frontend -- dev   # vite build,
 npm run seed -- dev            # loads content/game.private.json (or pass a file: npm run seed -- dev content/game.example.json --allow-missing-images)
 npm run seed -- --check        # validate the content file only, no AWS
 npm run start-game -- dev      # registration → live (same as the admin start endpoint)
+npm run review -- dev          # list photo/dance submissions; `approve <n>` or `decline <n> "reason"` (until /admin, phase 7)
 npm run create-gm -- dev       # creates (or resets) user `gamemaster` in the gamemaster group; prompts for the password. Optional 2nd arg: username
 ```
 First deploy of an env: frontend stack (`deploy:stack`, gives the `SiteUrl`) → put `AllowedOrigin=<SiteUrl>` in that env's `parameter_overrides` in `backend/samconfig.toml` → backend → frontend app (`frontend:env` + `deploy`) → seed → create GM. Prod's CORS needs a real origin, so never deploy the prod backend before `AllowedOrigin` is set. A backend deploy without `AllowedOrigin` leaves CORS allowing localhost only (dev).

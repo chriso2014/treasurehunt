@@ -2,6 +2,7 @@ import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { S3Client } from '@aws-sdk/client-s3';
+import { SSMClient } from '@aws-sdk/client-ssm';
 
 // One client of each kind per Lambda container.
 export const db = DynamoDBDocumentClient.from(new DynamoDBClient({}), {
@@ -9,3 +10,4 @@ export const db = DynamoDBDocumentClient.from(new DynamoDBClient({}), {
 });
 export const s3 = new S3Client({});
 export const cognito = new CognitoIdentityProviderClient({});
+export const ssm = new SSMClient({});

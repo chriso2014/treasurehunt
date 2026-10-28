@@ -27,6 +27,12 @@ export const attemptKey = (teamId: string, stage: number, attemptId: string) => 
   SK: `ATTEMPT#${pad(stage)}#${attemptId}`,
 });
 
+/** A photo-question submission; under teams/ so it shares the team photo's expiry and access. */
+export const submissionPhotoKey = (teamId: string, stage: number, attemptId: string) =>
+  `teams/${teamId}/submissions/${pad(stage)}-${attemptId}.jpg`;
+
+export const REVIEW_PENDING = 'REVIEW#PENDING';
+
 export type TeamProfile = {
   teamId: string;
   name: string;

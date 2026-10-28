@@ -1,8 +1,15 @@
-import type { GameContent, GameStatus, Question, TeamState } from '@treasurehunt/shared';
-import { getGameStatus, loadTeam, type TeamRecord } from './game.js';
+import type {
+  GameContent,
+  GameStatus,
+  Question,
+  StageResult,
+  TeamState,
+} from '@treasurehunt/shared';
+import { getGameStatus, loadTeam, type StageItem, type TeamRecord } from './game.js';
 import { getContentConfig, getQuestion, getRoute, penaltyFor } from './content.js';
 import { clock } from './clock.js';
 import { viewUrl } from './s3.js';
+import { gmWhatsappUrl } from './whatsapp.js';
 import { elapsedMs } from './timer.js';
 
 // Builds the client `state` (docs/05-api-contract.md). Only earned information goes in:
@@ -18,10 +25,38 @@ export type StateInput = {
   questions: Map<string, Question>;
   now: Date;
   signUrl: (key: string) => Promise<string>;
+  /** wa.me link to the GM, shown on the dance stage after Reveal. */
+  whatsappUrl?: string | null;
 };
 
 const optionalUrl = (signUrl: StateInput['signUrl'], key: string | undefined) =>
   key ? signUrl(key) : Promise.resolve(null);
+
+/** Splits a finished stage's penalty into its causes; anything left over (e.g. content changed). */
+const stageResult = (
+  s: StageItem,
+  question: Question | undefined,
+  contentConfig: GameContent['config'],
+): StageResult => {
+  const each = (kind: 'wrong' | 'declined' | 'hint' | 'skip') =>
+    question ? penaltyFor(kind, question, contentConfig) : contentConfig.defaultPenaltyMs;
+  const declines = s.declines + (s.outcome === 'declined' ? 1 : 0);
+  const penalties: StageResult['penalties'] = [
+    { kind: 'wrong' as const, count: s.wrongAttempts, ms: s.wrongAttempts * each('wrong') },
+    { kind: 'declined' as const, count: declines, ms: declines * each('declined') },
+    { kind: 'hint' as const, count: s.hintUsed ? 1 : 0, ms: s.hintUsed ? each('hint') : 0 },
+    { kind: 'skip' as const, count: s.skipped ? 1 : 0, ms: s.skipped ? each('skip') : 0 },
+  ].filter((p) => p.count > 0);
+  const rest = s.penaltyMs - penalties.reduce((sum, p) => sum + p.ms, 0);
+  if (rest !== 0) penalties.push({ kind: 'other', count: 1, ms: rest });
+  return {
+    stage: s.stage,
+    outcome: s.outcome ?? (s.skipped ? 'skipped' : 'correct'),
+    timeMs: s.activeMs,
+    penaltyMs: s.penaltyMs,
+    penalties,
+  };
+};
 
 export const buildState = async (input: StateInput): Promise<TeamState> => {
   const { gameStatus, record, stageCount, contentConfig, questions, now, signUrl } = input;
@@ -86,7 +121,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
       hintUsed: stage.hintUsed,
       canSkip: stage.hintUsed && stage.status === 'revealed' && question.type !== 'video_call',
       lastResult: latest ? { result: latest.result, reason: latest.reason ?? null } : null,
-      whatsappUrl: null,
+      whatsappUrl: question.type === 'video_call' && revealed ? (input.whatsappUrl ?? null) : null,
     };
   }
 
@@ -103,6 +138,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
     },
     current,
     completedLocations,
+    results: done.map((s) => stageResult(s, questions.get(s.questionId), contentConfig)),
   };
 };
 
@@ -117,6 +153,8 @@ export const loadState = async (teamId: string): Promise<TeamState> => {
   const questions = new Map(
     await Promise.all([...ids].map(async (id) => [id, await getQuestion(id)] as const)),
   );
+  const current = record.stages.find((s) => s.stage === record.profile.currentStage);
+  const onDance = current !== undefined && questions.get(current.questionId)?.type === 'video_call';
   return buildState({
     gameStatus,
     record,
@@ -125,5 +163,6 @@ export const loadState = async (teamId: string): Promise<TeamState> => {
     questions,
     now: clock.now(),
     signUrl: viewUrl,
+    whatsappUrl: onDance ? await gmWhatsappUrl() : null,
   });
 };

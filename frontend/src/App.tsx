@@ -20,6 +20,7 @@ type View =
   | { name: 'team'; state: TeamState; receivedAt: number; changingPhoto?: boolean };
 
 const WAITING_POLL_MS = 5000;
+const REVIEW_POLL_MS = 3000;
 
 // Screens render from the server state; the only local choice is which form to show when signed out.
 export const App = () => {
@@ -56,7 +57,8 @@ export const App = () => {
     view.state.game.status === 'registration' &&
     view.state.team.photoUrl !== null &&
     !view.changingPhoto;
-  usePolling(load, waiting ? WAITING_POLL_MS : null);
+  const inReview = view.name === 'team' && view.state.current?.status === 'awaiting_review';
+  usePolling(load, waiting ? WAITING_POLL_MS : inReview ? REVIEW_POLL_MS : null);
 
   const signOut = async () => {
     await signOutTeam();

@@ -30,6 +30,7 @@ Globals:
         CONTENT_TABLE: !Ref ContentTable
         ASSETS_BUCKET: !Ref AssetsBucket
         USER_POOL_ID: !Ref UserPool
+        WHATSAPP_PARAM: !Sub /treasurehunt/${Env}/gm-whatsapp-number
         POWERTOOLS_SERVICE_NAME: treasurehunt
 
 Resources:
@@ -313,6 +314,7 @@ Resources:
               Resource:
                 - !Sub ${AssetsBucket.Arn}/teams/*
                 - !Sub ${AssetsBucket.Arn}/content/*
+        - !Ref WhatsappParamReadPolicy
 
   TeamStateLogGroup:
     Type: AWS::Logs::LogGroup
@@ -345,6 +347,7 @@ Resources:
               Resource:
                 - !Sub ${AssetsBucket.Arn}/teams/*
                 - !Sub ${AssetsBucket.Arn}/content/*
+        - !Ref WhatsappParamReadPolicy
 
   TeamRevealLogGroup:
     Type: AWS::Logs::LogGroup
@@ -377,6 +380,7 @@ Resources:
               Resource:
                 - !Sub ${AssetsBucket.Arn}/teams/*
                 - !Sub ${AssetsBucket.Arn}/content/*
+        - !Ref WhatsappParamReadPolicy
 
   TeamAnswerLogGroup:
     Type: AWS::Logs::LogGroup
@@ -409,6 +413,7 @@ Resources:
               Resource:
                 - !Sub ${AssetsBucket.Arn}/teams/*
                 - !Sub ${AssetsBucket.Arn}/content/*
+        - !Ref WhatsappParamReadPolicy
 
   TeamHintLogGroup:
     Type: AWS::Logs::LogGroup
@@ -441,12 +446,120 @@ Resources:
               Resource:
                 - !Sub ${AssetsBucket.Arn}/teams/*
                 - !Sub ${AssetsBucket.Arn}/content/*
+        - !Ref WhatsappParamReadPolicy
 
   TeamSkipLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/${TeamSkipFunction}
       RetentionInDays: 14
+
+  TeamSubmissionUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-submission-upload
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/current/photo-upload
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Signs the pre-signed POST; the browser does the upload.
+            - Effect: Allow
+              Action: s3:PutObject
+              Resource: !Sub ${AssetsBucket.Arn}/teams/*/submissions/*
+
+  TeamSubmissionUploadLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamSubmissionUploadFunction}
+      RetentionInDays: 14
+
+  TeamSubmitPhotoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-submit-photo
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/current/photo
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for the team photo and content images (and HeadObject).
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
+        - !Ref WhatsappParamReadPolicy
+
+  TeamSubmitPhotoLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamSubmitPhotoFunction}
+      RetentionInDays: 14
+
+  TeamVideoCallFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-video-call
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/current/video-call
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for the team photo and content images (and HeadObject).
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
+        - !Ref WhatsappParamReadPolicy
+
+  TeamVideoCallLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamVideoCallFunction}
+      RetentionInDays: 14
+
+  # The GM's WhatsApp number; created by hand (docs/08) so it never reaches the repo.
+  WhatsappParamReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: ssm:GetParameter
+            Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/treasurehunt/${Env}/gm-whatsapp-number
 
   AdminStartGameFunction:
     Type: AWS::Serverless::Function

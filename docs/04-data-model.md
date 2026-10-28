@@ -69,7 +69,7 @@ outcome?: correct | approved | declined | skipped | gm_accepted
 ```
 stage, attemptId, questionId, type, submittedAt,
 value?        // option id or text
-photoKey?     // photo submissions
+photoKey?     // photo submissions: teams/{teamId}/submissions/{nn}-{attemptId}.jpg
 result: correct | wrong | pending | approved | declined | gm_accepted,
 reviewedAt?, reason?
 ```

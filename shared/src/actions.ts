@@ -17,6 +17,17 @@ export type HintRequest = z.infer<typeof hintRequestSchema>;
 export const skipRequestSchema = z.object({ stage });
 export type SkipRequest = z.infer<typeof skipRequestSchema>;
 
+/** Photo upload, photo submission and dance call: one attemptId per submission. */
+export const submissionRequestSchema = z.object({ stage, attemptId: z.uuid() });
+export type SubmissionRequest = z.infer<typeof submissionRequestSchema>;
+
+/** GM decision on a pending photo or dance (scripts/review.ts now, /admin in phase 7). */
+export const reviewDecisionSchema = z.object({
+  decision: z.enum(['approved', 'declined']),
+  reason: z.string().trim().max(200).optional(),
+});
+export type ReviewDecision = z.infer<typeof reviewDecisionSchema>;
+
 export const answerRequestSchema = z.union([
   z.object({ stage, attemptId: z.uuid(), optionId: z.string().min(1) }),
   z.object({ stage, attemptId: z.uuid(), text: z.string().trim().min(1).max(200) }),

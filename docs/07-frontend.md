@@ -22,7 +22,7 @@ Admin console is in the same app at `/admin`, designed to work on a phone (the G
 | `clue` | Clue text/image + **Reveal question** button (+ warning that the timer starts) |
 | `revealed` | Question + answer input for its type + live timer + Hint / Skip buttons |
 | `awaiting_review` | "Waiting for game master…" with paused timer |
-| team `finished` | Finished screen with total time |
+| team `finished` | Finished screen with total time; "See more about your time" opens each question's time and penalties (`state.results`) |
 
 ## Live updates (polling, ADR-007)
 - Team: poll `GET /teams/me/state` every 5 s while waiting for the game to start, and every 3 s while `awaiting_review`. Otherwise use the `state` returned by each action.
