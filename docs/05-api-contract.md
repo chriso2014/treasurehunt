@@ -52,10 +52,12 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
   "completedLocations": [ { "name": "...", "lat": 51.95, "lng": -0.28 } ],
   "map": { "centre": { "lat": 51.949, "lng": -0.28 }, "zoom": 15 },
   "results": [ { "stage": 1, "outcome": "correct", "timeMs": 192000, "penaltyMs": 300000,
-                 "penalties": [ { "kind": "wrong", "count": 1, "ms": 300000 } ] } ]
+                 "penalties": [ { "kind": "wrong", "count": 1, "ms": 300000 } ] } ],
+  "serverTime": "2026-...Z"
 }
 ```
 - `team.photoUrl`: pre-signed view URL of the team photo, or null before one is confirmed (the client then asks for a photo).
+- `serverTime`: when the server built this state. Polls and action responses can arrive out of order, so the client keeps the newest.
 - `current` is null before the start and after the team finishes. `current.stage` is the stage number to send with actions.
 - `question` is null until revealed. `hint` is null until used. `hintPenaltyMs`/`skipPenaltyMs` are what using the hint or skipping would add, for the confirm dialogs. Correct answers are never included.
 - The client shows a live timer by counting up locally from `elapsedMs`, using `serverTime` to correct clock skew, and re-syncs on every response.

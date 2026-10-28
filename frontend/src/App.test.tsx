@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { TeamState } from '@treasurehunt/shared';
 import { App } from './App.js';
@@ -14,7 +14,24 @@ vi.mock('./auth/index.js', async (importOriginal) => ({
   signOutTeam: vi.fn(),
 }));
 vi.mock('./lib/poller.js', () => ({ usePolling: vi.fn() }));
-vi.mock('./pages/Play.js', () => ({ Play: () => <p>Playing</p> }));
+vi.mock('./pages/Play.js', () => ({
+  Play: ({ state, onState }: { state: TeamState; onState: (s: TeamState) => void }) => (
+    <div>
+      <p>Playing stage {state.team.stage}</p>
+      <button
+        onClick={() =>
+          onState({
+            ...state,
+            team: { ...state.team, stage: state.team.stage + 1 },
+            serverTime: '2026-10-28T10:05:00.000Z',
+          })
+        }
+      >
+        Act
+      </button>
+    </div>
+  ),
+}));
 vi.mock('./api/client.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./api/client.js')>()),
   getState: vi.fn(),
@@ -36,6 +53,7 @@ const state = (overrides: Partial<TeamState['team']> = {}, game = 'registration'
   current: null,
   completedLocations: [],
   map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
+  serverTime: '2026-10-28T10:00:00.000Z',
   results: [],
 });
 
@@ -146,7 +164,7 @@ describe('App polling', () => {
       current: { status: 'revealed' } as TeamState['current'],
     });
     render(<App />);
-    expect(await screen.findByText('Playing')).toBeInTheDocument();
+    expect(await screen.findByText('Playing stage 1')).toBeInTheDocument();
     expect(lastInterval()).toBe(5000);
   });
 
@@ -156,7 +174,7 @@ describe('App polling', () => {
       current: { status: 'awaiting_review' } as TeamState['current'],
     });
     render(<App />);
-    expect(await screen.findByText('Playing')).toBeInTheDocument();
+    expect(await screen.findByText('Playing stage 1')).toBeInTheDocument();
     expect(lastInterval()).toBe(3000);
   });
 
@@ -165,5 +183,49 @@ describe('App polling', () => {
     render(<App />);
     expect(await screen.findByText('Finished!')).toBeInTheDocument();
     expect(lastInterval()).toBeNull();
+  });
+});
+
+describe('App applying states', () => {
+  const poll = () => act(async () => void (await vi.mocked(usePolling).mock.calls.at(-1)![0]()));
+  const playing = (stage: number, serverTime: string): TeamState => ({
+    ...state({ status: 'playing', stage }, 'live'),
+    current: {
+      status: 'revealed',
+      clue: { text: null, imageUrl: null },
+      question: null,
+      hint: null,
+    } as unknown as TeamState['current'],
+    serverTime,
+  });
+
+  it('keeps a newer action result when an older poll arrives late, then takes newer polls', async () => {
+    vi.mocked(client.getState).mockResolvedValue(playing(1, '2026-10-28T10:00:00.000Z'));
+    render(<App />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Act' }));
+    expect(screen.getByText('Playing stage 2')).toBeInTheDocument();
+
+    vi.mocked(client.getState).mockResolvedValue(playing(1, '2026-10-28T10:04:00.000Z'));
+    await poll();
+    expect(screen.getByText('Playing stage 2')).toBeInTheDocument();
+
+    vi.mocked(client.getState).mockResolvedValue(playing(3, '2026-10-28T10:06:00.000Z'));
+    await poll();
+    expect(screen.getByText('Playing stage 3')).toBeInTheDocument();
+  });
+
+  it('keeps the signed URL of an unchanged image between polls', async () => {
+    vi.mocked(client.getState).mockResolvedValue(state({ photoUrl: 'https://s3/photo.jpg?sig=1' }));
+    render(<App />);
+    expect(await screen.findByAltText('Team photo')).toHaveAttribute(
+      'src',
+      'https://s3/photo.jpg?sig=1',
+    );
+    vi.mocked(client.getState).mockResolvedValue({
+      ...state({ photoUrl: 'https://s3/photo.jpg?sig=2' }),
+      serverTime: '2026-10-28T10:00:05.000Z',
+    });
+    await poll();
+    expect(screen.getByAltText('Team photo')).toHaveAttribute('src', 'https://s3/photo.jpg?sig=1');
   });
 });

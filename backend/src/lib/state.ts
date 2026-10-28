@@ -140,6 +140,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
     completedLocations,
     map: contentConfig.map,
     results: done.map((s) => stageResult(s, questions.get(s.questionId), contentConfig)),
+    serverTime: now.toISOString(),
   };
 };
 
