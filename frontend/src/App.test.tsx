@@ -123,3 +123,12 @@ describe('Register', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('That team name is taken');
   });
 });
+
+describe('App after the game ends', () => {
+  it('shows the finished screen to a team still playing when the GM ends the game', async () => {
+    vi.mocked(auth.getAccessToken).mockResolvedValue('token');
+    vi.mocked(client.getState).mockResolvedValue(state({ status: 'playing' }, 'finished'));
+    render(<App />);
+    expect(await screen.findByText('The game master has ended the game.')).toBeInTheDocument();
+  });
+});

@@ -60,11 +60,16 @@ export const completeStageItems = (args: {
   nextQuestionId: string | undefined;
   outcome: StageOutcome;
   extraPenaltyMs?: number;
+  /** When the timer stopped, if earlier than now (a GM-accepted answer stops at its submission). */
+  stopAt?: Date;
+  /** Corrected wrong-answer count (a GM-accepted answer removes its own and later ones). */
+  wrongAttempts?: number;
   now: Date;
 }): TransactItems => {
   const { profile, stage, nextQuestionId, outcome, now } = args;
   const extraPenaltyMs = args.extraPenaltyMs ?? 0;
-  const { activeMs } = paused(stage, now);
+  const { activeMs } = paused(stage, args.stopAt ?? now);
+  const wrongAttempts = args.wrongAttempts ?? stage.wrongAttempts;
   const penaltyMs = stage.penaltyMs + extraPenaltyMs;
   const nowIso = now.toISOString();
   const finished = nextQuestionId === undefined;
@@ -76,7 +81,7 @@ export const completeStageItems = (args: {
         Key: stageKey(profile.teamId, stage.stage),
         UpdateExpression:
           'SET #status = :done, completedAt = :now, activeMs = :activeMs, penaltyMs = :penaltyMs, ' +
-          'outcome = :outcome, skipped = :skipped REMOVE runningSince',
+          'outcome = :outcome, skipped = :skipped, wrongAttempts = :wrong REMOVE runningSince',
         ConditionExpression: '#status = :expected AND penaltyMs = :oldPenalty',
         ExpressionAttributeNames: { '#status': 'status' },
         ExpressionAttributeValues: {
@@ -86,6 +91,7 @@ export const completeStageItems = (args: {
           ':penaltyMs': penaltyMs,
           ':outcome': outcome,
           ':skipped': outcome === 'skipped',
+          ':wrong': wrongAttempts,
           ':expected': stage.status,
           ':oldPenalty': stage.penaltyMs,
         },

@@ -77,6 +77,24 @@ export type AttemptItem = {
   reason?: string;
 };
 
+export type GameItem = {
+  status: GameStatus;
+  startedAt?: string;
+  resultsPublished?: boolean;
+  /** GM's order for teams with equal totals (ADR: manual tie-break on the dance). */
+  tieBreakOrder?: string[];
+};
+
+export const getGame = async (): Promise<GameItem> => {
+  const res = await db.send(
+    new GetCommand({ TableName: config.gameTable, Key: GAME_KEY, ConsistentRead: true }),
+  );
+  return {
+    ...(res.Item as Partial<GameItem> | undefined),
+    status: (res.Item?.status as GameStatus | undefined) ?? 'registration',
+  };
+};
+
 /** The game item is created by the first registration; until then the game is in registration. */
 export const getGameStatus = async (): Promise<GameStatus> => {
   const res = await db.send(new GetCommand({ TableName: config.gameTable, Key: GAME_KEY }));
@@ -118,6 +136,28 @@ export const loadTeam = async (teamId: string): Promise<TeamRecord> => {
     stages: startsWith('STAGE#') as unknown as StageItem[],
     attempts: startsWith('ATTEMPT#') as unknown as AttemptItem[],
   };
+};
+
+/** Splits Game table items into team records (used by the leaderboard's one Scan). */
+export const groupTeams = (items: Record<string, unknown>[]): TeamRecord[] => {
+  const byTeam = new Map<string, TeamRecord>();
+  const recordFor = (pk: string) => {
+    let r = byTeam.get(pk);
+    if (!r) {
+      r = { profile: undefined as unknown as TeamProfile, stages: [], attempts: [] };
+      byTeam.set(pk, r);
+    }
+    return r;
+  };
+  for (const item of items) {
+    const { PK, SK } = item as { PK?: string; SK?: string };
+    if (!PK?.startsWith('TEAM#') || !SK) continue;
+    const r = recordFor(PK);
+    if (SK === 'PROFILE') r.profile = item as unknown as TeamProfile;
+    else if (SK.startsWith('STAGE#')) r.stages.push(item as unknown as StageItem);
+    else if (SK.startsWith('ATTEMPT#')) r.attempts.push(item as unknown as AttemptItem);
+  }
+  return [...byTeam.values()].filter((r) => r.profile !== undefined);
 };
 
 export const currentStageOf = (record: TeamRecord): StageItem | undefined =>

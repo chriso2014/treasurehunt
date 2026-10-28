@@ -58,6 +58,16 @@ export const parseBody = <T extends z.ZodType>(
   return result.data;
 };
 
+/** A required path parameter, e.g. {teamId}. */
+export const pathParam = (
+  event: Pick<APIGatewayProxyEventV2, 'pathParameters'>,
+  name: string,
+): string => {
+  const value = event.pathParameters?.[name];
+  if (!value) throw new AppError('VALIDATION', `Missing ${name}`);
+  return value;
+};
+
 /** Wraps a handler: logs and maps errors to the API error format. */
 export const route =
   <E>(fn: (event: E) => Promise<APIGatewayProxyResultV2>) =>

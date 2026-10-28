@@ -81,7 +81,9 @@ export const App = () => {
       );
     case 'team': {
       const { state } = view;
-      if (state.team.status === 'finished') return <Finished state={state} />;
+      if (state.team.status === 'finished' || state.game.status === 'finished') {
+        return <Finished state={state} />;
+      }
       if (state.team.status === 'playing' && state.current) {
         return (
           <Play

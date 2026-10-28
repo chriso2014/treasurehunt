@@ -13,7 +13,12 @@ Static SPA built with Node.js tooling, deployed to S3 + CloudFront (ADR-002). On
 | `/admin` | GM only | Shown only when signed in as a `gamemaster` group member; otherwise redirect to `/`. Real protection is on the API (admin routes require the group) |
 | `/results` | Public, after publish | Final ranking |
 
-Admin console is in the same app at `/admin`, designed to work on a phone (the GM will be out in Hitchin) and fine on a laptop.
+Admin console is in the same app at `/admin`, designed to work on a phone (the GM will be out in Hitchin) and fine on a laptop. `main.tsx` picks the page by path (no router).
+- GM sign-in (username from `npm run create-gm`, default `gamemaster`).
+- Game box: Start game (registration), Publish results (live; warns how many teams are still playing), link to `/results` once published.
+- "Waiting for you": review queue, oldest first. Photo (tap to open full size) or "dance call"; optional decline reason; Approve / Decline.
+- Leaderboard: rank, photo, name, route, stage x of y and what the team is doing, live total. Route picker before the start; "Tie: put above" on finished teams with the same total as the team above; wrong text answers with an accept button.
+- Everything refreshes every 5 s and after each action.
 
 ## Team screens (driven by `state.current.status`)
 | Status | Screen |

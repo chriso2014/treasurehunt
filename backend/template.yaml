@@ -550,6 +550,222 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${TeamVideoCallFunction}
       RetentionInDays: 14
 
+  AdminTeamsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-teams
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/teams
+            Method: GET
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Scan]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:GetItem]
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for team photos and photo answers.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+
+  AdminTeamsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminTeamsFunction}
+      RetentionInDays: 14
+
+  AdminReviewsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-reviews
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/reviews
+            Method: GET
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:Query]
+              Resource: !Sub ${GameTable.Arn}/index/GSI1
+            - Effect: Allow
+              Action: [dynamodb:GetItem]
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for team photos and photo answers.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+
+  AdminReviewsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminReviewsFunction}
+      RetentionInDays: 14
+
+  AdminReviewDecisionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-review-decision
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/reviews/{teamId}/{attemptId}
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:GetItem]
+              Resource: !GetAtt ContentTable.Arn
+
+  AdminReviewDecisionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminReviewDecisionFunction}
+      RetentionInDays: 14
+
+  AdminAcceptAnswerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-accept-answer
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/attempts/{teamId}/{attemptId}/accept
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query, dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:GetItem]
+              Resource: !GetAtt ContentTable.Arn
+
+  AdminAcceptAnswerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminAcceptAnswerFunction}
+      RetentionInDays: 14
+
+  AdminSetRouteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-set-route
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/teams/{teamId}/route
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+
+  AdminSetRouteLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminSetRouteFunction}
+      RetentionInDays: 14
+
+  AdminTieBreakFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-tie-break
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/game/tie-break
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+
+  AdminTieBreakLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminTieBreakFunction}
+      RetentionInDays: 14
+
+  AdminPublishResultsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/admin-publish-results
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/game/publish-results
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:UpdateItem]
+              Resource: !GetAtt GameTable.Arn
+
+  AdminPublishResultsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AdminPublishResultsFunction}
+      RetentionInDays: 14
+
+  PublicResultsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/public-results
+      Events:
+        Call:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /results
+            Method: GET
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Scan]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: [dynamodb:GetItem]
+              Resource: !GetAtt ContentTable.Arn
+            # Pre-signed view URLs for team photos and photo answers.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+
+  PublicResultsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${PublicResultsFunction}
+      RetentionInDays: 14
+
   # The GM's WhatsApp number; created by hand (docs/08) so it never reaches the repo.
   WhatsappParamReadPolicy:
     Type: AWS::IAM::ManagedPolicy

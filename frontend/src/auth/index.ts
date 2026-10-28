@@ -36,6 +36,36 @@ export const signInTeam = async (teamName: string, password: string): Promise<vo
   }
 };
 
+/** Game master sign-in: the Cognito username as created by `npm run create-gm`. */
+export const signInGamemaster = async (username: string, password: string): Promise<void> => {
+  await signOut().catch(() => undefined);
+  try {
+    const result = await signIn({
+      username: username.trim(),
+      password,
+      options: { authFlowType: 'USER_SRP_AUTH' },
+    });
+    if (!result.isSignedIn) throw new SignInError('Sign-in needs another step');
+  } catch (err) {
+    if (err instanceof SignInError) throw err;
+    if (err instanceof Error && err.name === 'NotAuthorizedException') {
+      throw new SignInError('Username or password is wrong');
+    }
+    throw err;
+  }
+};
+
+/** Whether the signed-in user is in the gamemaster group (display only; the API enforces it). */
+export const isGamemasterSession = async (): Promise<boolean> => {
+  try {
+    const session = await fetchAuthSession();
+    const groups = session.tokens?.accessToken.payload['cognito:groups'];
+    return Array.isArray(groups) && groups.includes('gamemaster');
+  } catch {
+    return false;
+  }
+};
+
 /** The current access token, refreshed if needed; undefined when signed out. */
 export const getAccessToken = async (): Promise<string | undefined> => {
   try {

@@ -1,3 +1,4 @@
+export * from './admin.js';
 export * from './actions.js';
 export * from './content.js';
 export * from './errors.js';
