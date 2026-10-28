@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { TeamState } from '@treasurehunt/shared';
 import { ApiError, answer, reveal, type Answer } from '../api/client.js';
-import { Button, ErrorMessage, Screen } from '../components/ui.js';
+import { Button, ErrorMessage, SafeImage, Screen } from '../components/ui.js';
 import { errorText } from '../lib/errors.js';
 import { formatDuration, useTicker } from '../lib/time.js';
 
@@ -83,7 +83,7 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
       <section className="flex flex-col gap-3">
         <h2 className="text-sm uppercase tracking-wide text-slate-400">Clue</h2>
         {current.clue.imageUrl && (
-          <img src={current.clue.imageUrl} alt="Clue" className="w-full rounded-2xl" />
+          <SafeImage src={current.clue.imageUrl} alt="Clue" className="w-full rounded-2xl" />
         )}
         {current.clue.text && <p className="text-2xl leading-snug">{current.clue.text}</p>}
       </section>
@@ -104,7 +104,11 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
         <section className="flex flex-col gap-3 rounded-2xl border-2 border-amber-400 p-4">
           <h2 className="text-sm uppercase tracking-wide text-amber-300">Question</h2>
           {current.question.imageUrl && (
-            <img src={current.question.imageUrl} alt="Question" className="w-full rounded-xl" />
+            <SafeImage
+              src={current.question.imageUrl}
+              alt="Question"
+              className="w-full rounded-xl"
+            />
           )}
           <p className="text-2xl leading-snug">{current.question.text}</p>
         </section>

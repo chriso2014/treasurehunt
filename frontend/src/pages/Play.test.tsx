@@ -182,3 +182,19 @@ describe('Play', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
+
+describe('SafeImage', () => {
+  it('hides a clue image that fails to load', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    render(
+      <Play
+        state={state(current({ clue: { text: 'c', imageUrl: 'https://missing' } }))}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    fireEvent.error(screen.getByAltText('Clue'));
+    expect(screen.queryByAltText('Clue')).not.toBeInTheDocument();
+  });
+});

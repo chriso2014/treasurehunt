@@ -32,7 +32,7 @@ npm run deploy:stack -w frontend -- dev
 # frontend app
 npm run frontend:env -- dev && npm run deploy -w frontend -- dev   # vite build, s3 sync, CloudFront invalidation
 # content and GM user
-npm run seed -- dev            # loads content/game.private.json (or pass a file: npm run seed -- dev content/game.example.json)
+npm run seed -- dev            # loads content/game.private.json (or pass a file: npm run seed -- dev content/game.example.json --allow-missing-images)
 npm run seed -- --check        # validate the content file only, no AWS
 npm run start-game -- dev      # registration → live (same as the admin start endpoint)
 npm run create-gm -- dev       # creates (or resets) user `gamemaster` in the gamemaster group; prompts for the password. Optional 2nd arg: username
