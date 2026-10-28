@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Hitchin Treasure Hunt backend (HTTP API + Lambdas)
+
+Parameters:
+  Env:
+    Type: String
+    AllowedValues: [dev, prod]
+  AllowedOrigin:
+    Type: String
+    Default: ''
+    Description: Frontend CloudFront URL for CORS (set after the first frontend deploy)
+
+Conditions:
+  IsDev: !Equals [!Ref Env, dev]
+  HasAllowedOrigin: !Not [!Equals [!Ref AllowedOrigin, '']]
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures: [arm64]
+    Handler: index.handler
+    MemorySize: 256
+    Timeout: 10
+    Environment:
+      Variables:
+        ENV: !Ref Env
+        NODE_OPTIONS: --enable-source-maps
+
+Resources:
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: !If
+          - HasAllowedOrigin
+          - !If [IsDev, [!Ref AllowedOrigin, 'http://localhost:5173'], [!Ref AllowedOrigin]]
+          - ['http://localhost:5173']
+        AllowMethods: [GET, POST, OPTIONS]
+        AllowHeaders: [authorization, content-type]
+        MaxAge: 600
+
+  # Handlers are pre-bundled by `npm run build` (scripts/build.ts) into dist/<group>-<name>/.
+  HealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/public-health
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /health
+            Method: GET
+
+  HealthLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${HealthFunction}
+      RetentionInDays: 14
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
+  Region:
+    Value: !Ref AWS::Region

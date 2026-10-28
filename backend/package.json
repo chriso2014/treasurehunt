@@ -1,0 +1,20 @@
+{
+  "name": "@treasurehunt/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "deploy": "npm run build && sam deploy --config-env",
+    "frontend:env": "tsx scripts/write-frontend-env.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@treasurehunt/shared": "*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.164",
+    "esbuild": "^0.28.2"
+  }
+}

@@ -7,7 +7,7 @@ Each phase should fit in one or two Claude sessions and ends with something test
 | # | Phase | Done when | Status |
 |---|-------|-----------|--------|
 | 0 | Context files | All docs filled, decisions recorded | Done (look & feel and event date still TBD) |
-| 1 | Scaffold | npm workspaces, TS configs, ESLint/Prettier, Vitest, GitHub Actions CI (lint + test); `backend/template.yaml` and `frontend/template.yaml` skeletons deploy to dev; frontend "hello" page served via CloudFront | Not started |
+| 1 | Scaffold | npm workspaces, TS configs, ESLint/Prettier, Vitest, GitHub Actions CI (lint + test); `backend/template.yaml` and `frontend/template.yaml` skeletons deploy to dev; frontend "hello" page served via CloudFront | Code done (lint, typecheck, tests green; templates pass cfn-lint). First dev deploy pending |
 | 2 | Data + content | `Content` + `Game` tables, assets bucket; `shared/` content schema (zod); `npm run seed -- dev` validates and loads `content/game.example.json`/private file | Not started |
 | 3 | Auth + registration | Cognito pool, `gamemaster` group, `create-gm` script; `POST /teams` (slug, route alternation, rollback); photo upload + confirm; register/sign-in/waiting screens on a phone | Not started |
 | 4 | Core game loop | `lib/` timer, transitions, answer matching (fully unit-tested); `GET state`, `reveal`, `answer` for dropdown + free text; GM `start` endpoint; clue → question → next clue screens with live timer | Not started |

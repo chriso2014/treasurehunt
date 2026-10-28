@@ -147,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Treasure hunt
+content/game.private.json
+.aws-sam/
+.DS_Store

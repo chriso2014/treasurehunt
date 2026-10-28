@@ -26,14 +26,16 @@ Domain: default `*.cloudfront.net` address (no custom domain for now).
 ## Deploy (from your machine)
 ```bash
 # backend
-npm run build -w backend && cd backend && sam build && sam deploy --config-env dev
-# frontend
+npm run deploy -w backend -- dev          # esbuild bundle (scripts/build.ts) + sam deploy
+# frontend stack (S3 + CloudFront), only when frontend/template.yaml changes
+npm run deploy:stack -w frontend -- dev
+# frontend app
 npm run frontend:env -- dev && npm run deploy -w frontend -- dev   # vite build, s3 sync, CloudFront invalidation
 # content and GM user
 npm run seed -- dev            # loads content/game.private.json
 npm run create-gm -- dev       # creates the GM user in the gamemaster group (prompts for password)
 ```
-First deploy order: backend → frontend → re-deploy backend with `AllowedOrigin` → seed → create GM.
+First deploy order: backend → frontend stack → frontend app → re-deploy backend with `AllowedOrigin` (`npm run deploy -w backend -- dev --parameter-overrides Env=dev AllowedOrigin=https://<id>.cloudfront.net`) → seed → create GM.
 
 ## CI (GitHub Actions)
 - On every push/PR: install, lint, type-check, `npm test`. No AWS credentials in CI; deploys stay manual.
@@ -44,5 +46,5 @@ First deploy order: backend → frontend → re-deploy backend with `AllowedOrig
 - After the event: `npm run cleanup -- prod` deletes team photos, team items and Cognito team users; optionally `sam delete` the stacks.
 
 ## Rules for Claude
-- May run `sam build`, `sam validate`, and deploy to **dev**.
+- May run `sam validate`, `npm run build -w backend` and deploy to **dev**.
 - **Never deploy to prod, delete stacks or run cleanup without explicit confirmation.**
