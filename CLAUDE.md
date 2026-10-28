@@ -36,7 +36,7 @@ npm run dev -w frontend          # local frontend against the dev API
 npm run deploy -w backend -- dev    # esbuild bundle + sam deploy
 npm run deploy:stack -w frontend -- dev   # S3 + CloudFront stack
 npm run frontend:env -- dev && npm run deploy -w frontend -- dev
-npm run seed -- dev              # load content/game.private.json
+npm run seed -- dev              # validate + load content/game.private.json (--check: validate only)
 npm run e2e:dev                  # full scripted game against dev
 ```
 

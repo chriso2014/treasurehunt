@@ -32,10 +32,11 @@ npm run deploy:stack -w frontend -- dev
 # frontend app
 npm run frontend:env -- dev && npm run deploy -w frontend -- dev   # vite build, s3 sync, CloudFront invalidation
 # content and GM user
-npm run seed -- dev            # loads content/game.private.json
+npm run seed -- dev            # loads content/game.private.json (or pass a file: npm run seed -- dev content/game.example.json)
+npm run seed -- --check        # validate the content file only, no AWS
 npm run create-gm -- dev       # creates the GM user in the gamemaster group (prompts for password)
 ```
-First deploy order: backend → frontend stack → frontend app → set `AllowedOrigin=<SiteUrl>` in that env's `parameter_overrides` in `backend/samconfig.toml` and re-deploy the backend (a deploy without it resets CORS to localhost only) → seed → create GM.
+First deploy of an env: frontend stack (`deploy:stack`, gives the `SiteUrl`) → put `AllowedOrigin=<SiteUrl>` in that env's `parameter_overrides` in `backend/samconfig.toml` → backend → frontend app (`frontend:env` + `deploy`) → seed → create GM. Prod's CORS needs a real origin, so never deploy the prod backend before `AllowedOrigin` is set. A backend deploy without `AllowedOrigin` leaves CORS allowing localhost only (dev).
 
 ## CI (GitHub Actions)
 - On every push/PR: install, lint, type-check, `npm test`. No AWS credentials in CI; deploys stay manual.

@@ -152,3 +152,4 @@ vite.config.ts.timestamp-*
 content/game.private.json
 .aws-sam/
 .DS_Store
+content/images/

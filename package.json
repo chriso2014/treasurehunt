@@ -15,7 +15,8 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "frontend:env": "npm run frontend:env -w backend --"
+    "frontend:env": "npm run frontend:env -w backend --",
+    "seed": "npm run seed -w backend --"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

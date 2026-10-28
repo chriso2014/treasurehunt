@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Hitchin Treasure Hunt backend (HTTP API + Lambdas)
+Description: Hitchin Treasure Hunt backend (HTTP API, Lambdas, DynamoDB, assets bucket)
 
 Parameters:
   Env:
@@ -47,6 +47,83 @@ Resources:
           AllowHeaders: [authorization, content-type]
           MaxAge: 600
 
+  # Game content, loaded by `npm run seed`; read-only to the game Lambdas (docs/04-data-model.md).
+  ContentTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: PK, AttributeType: S }
+        - { AttributeName: SK, AttributeType: S }
+      KeySchema:
+        - { AttributeName: PK, KeyType: HASH }
+        - { AttributeName: SK, KeyType: RANGE }
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  # Game state: game, team profiles, stages, attempts. GSI1 is the sparse pending-review queue.
+  GameTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: PK, AttributeType: S }
+        - { AttributeName: SK, AttributeType: S }
+        - { AttributeName: GSI1PK, AttributeType: S }
+        - { AttributeName: GSI1SK, AttributeType: S }
+      KeySchema:
+        - { AttributeName: PK, KeyType: HASH }
+        - { AttributeName: SK, KeyType: RANGE }
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - { AttributeName: GSI1PK, KeyType: HASH }
+            - { AttributeName: GSI1SK, KeyType: RANGE }
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  # Private bucket for content images (content/) and team photos (teams/), via pre-signed URLs only.
+  AssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [GET, POST]
+            AllowedOrigins: !If
+              - IsDev
+              - !If
+                - HasAllowedOrigin
+                - [!Ref AllowedOrigin, 'http://localhost:5173']
+                - ['http://localhost:5173']
+              - [!Ref AllowedOrigin]
+            AllowedHeaders: ['*']
+            MaxAge: 600
+      LifecycleConfiguration:
+        Rules:
+          # Backstop for deleting team photos after the event (cleanup script does it first).
+          - Id: expire-team-photos
+            Status: Enabled
+            Prefix: teams/
+            ExpirationInDays: 30
+
   # Handlers are pre-bundled by `npm run build` (scripts/build.ts) into dist/<group>-<name>/.
   HealthFunction:
     Type: AWS::Serverless::Function
@@ -71,3 +148,9 @@ Outputs:
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
   Region:
     Value: !Ref AWS::Region
+  ContentTable:
+    Value: !Ref ContentTable
+  GameTable:
+    Value: !Ref GameTable
+  AssetsBucket:
+    Value: !Ref AssetsBucket
