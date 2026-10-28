@@ -10,10 +10,17 @@ Parameters:
     Type: String
     Default: ''
     Description: Frontend CloudFront URL for CORS (set after the first frontend deploy)
+  AlarmEmailParam:
+    Type: String
+    Default: ''
+    Description: >-
+      Name of an SSM String parameter holding the email for alarms (created by hand, so the
+      address never reaches the repo). Empty: no alarms.
 
 Conditions:
   IsDev: !Equals [!Ref Env, dev]
   HasAllowedOrigin: !Not [!Equals [!Ref AllowedOrigin, '']]
+  HasAlarms: !Not [!Equals [!Ref AlarmEmailParam, '']]
 
 Globals:
   Function:
@@ -37,6 +44,10 @@ Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiAccessLogGroup.Arn
+        Format: >-
+          {"requestId":"$context.requestId","time":"$context.requestTime","route":"$context.routeKey","status":"$context.status","latencyMs":"$context.responseLatency","error":"$context.error.message","integrationError":"$context.integrationErrorMessage"}
       Auth:
         DefaultAuthorizer: Cognito
         Authorizers:
@@ -60,6 +71,67 @@ Resources:
           AllowMethods: [GET, POST, OPTIONS]
           AllowHeaders: [authorization, content-type]
           MaxAge: 600
+
+  ApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/treasurehunt-${Env}
+      RetentionInDays: 14
+
+  # Game-day alarms (docs/11-observability-ops.md). Every Lambda sits behind the API and
+  # unexpected errors become 500s, so API 5xx covers handler errors and timeouts alike.
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Condition: HasAlarms
+    Properties:
+      TopicName: !Sub treasurehunt-${Env}-alarms
+
+  AlarmEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasAlarms
+    Properties:
+      TopicArn: !Ref AlarmTopic
+      Protocol: email
+      Endpoint: !Sub '{{resolve:ssm:${AlarmEmailParam}}}'
+
+  Api5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlarms
+    Properties:
+      AlarmName: !Sub treasurehunt-${Env}-api-5xx
+      AlarmDescription: The API returned a server error (see the failing Lambda's log group)
+      Namespace: AWS/ApiGateway
+      MetricName: 5xx
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref HttpApi
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+
+  ApiLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlarms
+    Properties:
+      AlarmName: !Sub treasurehunt-${Env}-api-slow
+      AlarmDescription: API responses are slow (p90 over 3 s for 10 minutes)
+      Namespace: AWS/ApiGateway
+      MetricName: Latency
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref HttpApi
+      ExtendedStatistic: p90
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 3000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
 
   # Teams are created by the register Lambda (no self sign-up); the GM by scripts/create-gm.ts.
   UserPool:
@@ -89,7 +161,11 @@ Resources:
     Properties:
       UserPoolId: !Ref UserPool
       GenerateSecret: false
-      ExplicitAuthFlows: [ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+      # Dev also allows the admin (IAM-only) password flow, for the e2e script's test users.
+      ExplicitAuthFlows: !If
+        - IsDev
+        - [ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH]
+        - [ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
       PreventUserExistenceErrors: ENABLED
       AccessTokenValidity: 1
       IdTokenValidity: 1

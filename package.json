@@ -19,7 +19,9 @@
     "seed": "tsx backend/scripts/seed.ts",
     "create-gm": "tsx backend/scripts/create-gm.ts",
     "start-game": "tsx backend/scripts/start-game.ts",
-    "review": "tsx backend/scripts/review.ts"
+    "review": "tsx backend/scripts/review.ts",
+    "reset": "tsx backend/scripts/reset.ts",
+    "e2e:dev": "tsx backend/scripts/e2e.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

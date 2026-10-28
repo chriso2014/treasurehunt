@@ -18,6 +18,10 @@ Domain: default `*.cloudfront.net` address (no custom domain for now).
   ```bash
   aws ssm put-parameter --name /treasurehunt/dev/gm-whatsapp-number --type String --value '+44…' --overwrite --profile ChrisOrmerod
   ```
+- SSM parameter `/treasurehunt/<env>/alarm-email` (String): where alarm emails go. Also created by hand; the env's `AlarmEmailParam` in `backend/samconfig.toml` names it (prod only, so the prod backend deploy needs it to exist). After the first deploy, click the confirm link in the email from AWS Notifications:
+  ```bash
+  aws ssm put-parameter --name /treasurehunt/prod/alarm-email --type String --value 'you@…' --overwrite --profile ChrisOrmerod
+  ```
 - Penalty defaults live in the content file (`config.defaultPenaltyMs`), not SSM.
 
 ## Developer access & prerequisites
@@ -41,6 +45,8 @@ npm run seed -- --check        # validate the content file only, no AWS
 npm run start-game -- dev      # registration → live (same as the admin start endpoint)
 npm run review -- dev          # list photo/dance submissions; `approve <n>` or `decline <n> "reason"` (until /admin, phase 7)
 npm run create-gm -- dev       # creates (or resets) user `gamemaster` in the gamemaster group; prompts for the password. Optional 2nd arg: username
+npm run reset -- dev           # deletes every team (items, logins, photos) and the game item: back to registration. Keeps content and GM logins; asks you to type the env name
+npm run e2e:dev                # scripted game on dev (needs dev reset first); resets dev again at the end
 ```
 First deploy of an env: frontend stack (`deploy:stack`, gives the `SiteUrl`) → put `AllowedOrigin=<SiteUrl>` in that env's `parameter_overrides` in `backend/samconfig.toml` → backend → frontend app (`frontend:env` + `deploy`) → seed → create GM. Prod's CORS needs a real origin, so never deploy the prod backend before `AllowedOrigin` is set. A backend deploy without `AllowedOrigin` leaves CORS allowing localhost only (dev).
 
@@ -50,8 +56,9 @@ First deploy of an env: frontend stack (`deploy:stack`, gives the `SiteUrl`) →
 ## Data lifecycle
 - DynamoDB on-demand, PITR on `Game` table.
 - Assets bucket: block public access, SSE-S3, CORS for pre-signed POST from the CloudFront origin, lifecycle expiry on `teams/` (e.g. 30 days) as a backstop.
-- After the event: `npm run cleanup -- prod` deletes team photos, team items and Cognito team users; optionally `sam delete` the stacks.
+- Before the event: `npm run reset -- prod` removes the rehearsal teams. After the event (once results are shared): the same command deletes team photos, team items and Cognito team users; optionally `sam delete` the stacks.
+- API access logs: `/aws/apigateway/treasurehunt-<env>` (14 days; no IPs).
 
 ## Rules for Claude
 - May run `sam validate`, `npm run build -w backend` and deploy to **dev**.
-- **Never deploy to prod, delete stacks or run cleanup without explicit confirmation.**
+- **Never deploy to prod, delete stacks or run cleanup (`npm run reset`, `e2e:dev`, which resets dev) without explicit confirmation.**

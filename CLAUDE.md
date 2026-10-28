@@ -38,7 +38,8 @@ npm run deploy:stack -w frontend -- dev   # S3 + CloudFront stack
 npm run frontend:env -- dev && npm run deploy -w frontend -- dev
 npm run seed -- dev              # validate + load content/game.private.json (--check: validate only)
 npm run review -- dev            # list/approve/decline photo + dance submissions from the CLI (or /admin)
-npm run e2e:dev                  # full scripted game against dev
+npm run reset -- dev             # delete all teams/logins/photos, game back to registration (asks to confirm)
+npm run e2e:dev                  # full scripted game against dev (after a reset; resets again after)
 ```
 
 ## Core rules
