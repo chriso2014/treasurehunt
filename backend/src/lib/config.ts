@@ -19,4 +19,8 @@ export const config = {
   get userPoolId() {
     return required('USER_POOL_ID');
   },
+  /** SSM parameter holding the GM's WhatsApp number (never in the repo). */
+  get whatsappParam() {
+    return process.env.WHATSAPP_PARAM;
+  },
 };

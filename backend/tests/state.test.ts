@@ -122,3 +122,19 @@ describe('buildState', () => {
     expect(finished.team.totalMs).toBe(5000);
   });
 });
+
+describe('buildState whatsappUrl', () => {
+  it('appears only on the dance after Reveal', async () => {
+    const dance = (status: 'clue' | 'revealed') =>
+      build({
+        record: record({
+          profile: profile({ currentStage: 3 }),
+          stages: [stage({ stage: 3, questionId: 'q4', status })],
+        }),
+        whatsappUrl: 'https://wa.me/447700900123',
+      });
+    expect((await dance('clue')).current?.whatsappUrl).toBeNull();
+    expect((await dance('revealed')).current?.whatsappUrl).toBe('https://wa.me/447700900123');
+    expect((await build({ whatsappUrl: 'https://wa.me/1' })).current?.whatsappUrl).toBeNull();
+  });
+});

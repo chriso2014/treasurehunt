@@ -18,7 +18,8 @@
     "frontend:env": "tsx backend/scripts/write-frontend-env.ts",
     "seed": "tsx backend/scripts/seed.ts",
     "create-gm": "tsx backend/scripts/create-gm.ts",
-    "start-game": "tsx backend/scripts/start-game.ts"
+    "start-game": "tsx backend/scripts/start-game.ts",
+    "review": "tsx backend/scripts/review.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

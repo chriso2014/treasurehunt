@@ -3,6 +3,7 @@ import { getGameStatus, loadTeam, type TeamRecord } from './game.js';
 import { getContentConfig, getQuestion, getRoute, penaltyFor } from './content.js';
 import { clock } from './clock.js';
 import { viewUrl } from './s3.js';
+import { gmWhatsappUrl } from './whatsapp.js';
 import { elapsedMs } from './timer.js';
 
 // Builds the client `state` (docs/05-api-contract.md). Only earned information goes in:
@@ -18,6 +19,8 @@ export type StateInput = {
   questions: Map<string, Question>;
   now: Date;
   signUrl: (key: string) => Promise<string>;
+  /** wa.me link to the GM, shown on the dance stage after Reveal. */
+  whatsappUrl?: string | null;
 };
 
 const optionalUrl = (signUrl: StateInput['signUrl'], key: string | undefined) =>
@@ -86,7 +89,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
       hintUsed: stage.hintUsed,
       canSkip: stage.hintUsed && stage.status === 'revealed' && question.type !== 'video_call',
       lastResult: latest ? { result: latest.result, reason: latest.reason ?? null } : null,
-      whatsappUrl: null,
+      whatsappUrl: question.type === 'video_call' && revealed ? (input.whatsappUrl ?? null) : null,
     };
   }
 
@@ -117,6 +120,8 @@ export const loadState = async (teamId: string): Promise<TeamState> => {
   const questions = new Map(
     await Promise.all([...ids].map(async (id) => [id, await getQuestion(id)] as const)),
   );
+  const current = record.stages.find((s) => s.stage === record.profile.currentStage);
+  const onDance = current !== undefined && questions.get(current.questionId)?.type === 'video_call';
   return buildState({
     gameStatus,
     record,
@@ -125,5 +130,6 @@ export const loadState = async (teamId: string): Promise<TeamState> => {
     questions,
     now: clock.now(),
     signUrl: viewUrl,
+    whatsappUrl: onDance ? await gmWhatsappUrl() : null,
   });
 };

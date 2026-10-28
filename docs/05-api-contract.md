@@ -27,9 +27,9 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
 | `POST /teams/me/current/answer` | `{ stage, attemptId, optionId }` or `{ stage, attemptId, text }` | Check; wrong: +penalty; correct: complete stage. Returns `{ correct, state }`; `correct` is null if the request was a late retry for a stage already finished |
 | `POST /teams/me/current/hint` | `{ stage }` | Only while `revealed`: `hintUsed`, +hint penalty (once). Returns `state` with `hint` filled in. Repeating it is harmless |
 | `POST /teams/me/current/skip` | `{ stage }` | Requires hint used, status `revealed`, not `video_call` (else 409); +skip penalty, stage `skipped`, next clue. Returns `state`. A late retry returns the current state |
-| `POST /teams/me/current/photo-upload` | none | Pre-signed POST for a submission photo |
-| `POST /teams/me/current/photo` | `{ key }` | Pause timer, `awaiting_review`, queue for GM |
-| `POST /teams/me/current/video-call` | none | Pause timer, `awaiting_review`, queue for GM; returns WhatsApp link |
+| `POST /teams/me/current/photo-upload` | `{ stage, attemptId }` | Photo question, `revealed` only. `{ url, fields, key }` pre-signed POST (5 min, `image/jpeg`, ≤5 MB) for `teams/{teamId}/submissions/{nn}-{attemptId}.jpg` |
+| `POST /teams/me/current/photo` | `{ stage, attemptId }` | After the upload (400 if it hasn't arrived): pending attempt in the review queue, timer paused, `awaiting_review`. Returns `state`. Same `attemptId` again is harmless |
+| `POST /teams/me/current/video-call` | `{ stage, attemptId }` | Dance stage, `revealed` only: pending attempt, timer paused, `awaiting_review`. Returns `state`; `current.whatsappUrl` is the `wa.me` link |
 
 ### `state` object
 ```json
@@ -64,7 +64,7 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
 | `GET /admin/teams` | Leaderboard: teams, stage, totals, status |
 | `PUT /admin/teams/{teamId}/route` | Override route (before start only) |
 | `GET /admin/reviews` | Pending photo/video submissions (photo pre-signed URLs) |
-| `POST /admin/reviews/{teamId}/{attemptSk}` | `{ decision: approved|declined, reason? }` |
+| `POST /admin/reviews/{teamId}/{attemptSk}` | `{ decision: approved|declined, reason? }` (phase 7; the logic is `lib/review.ts`, used by `npm run review` until then) |
 | `POST /admin/attempts/{teamId}/{attemptSk}/accept` | Accept a wrong text answer manually |
 | `POST /admin/teams/{teamId}/adjust` | `{ stage, deltaMs, note }`: manual time correction (logged) |
 | `PUT /admin/game/tie-break` | `{ teamIds: [...] }` |

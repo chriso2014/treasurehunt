@@ -103,6 +103,20 @@ export const hint = (stage: number): Promise<TeamState> =>
 export const skip = (stage: number): Promise<TeamState> =>
   request('POST', '/teams/me/current/skip', teamStateSchema, { body: { stage } });
 
+export const getSubmissionUpload = (
+  stage: number,
+  attemptId: string,
+): Promise<PhotoUploadResponse> =>
+  request('POST', '/teams/me/current/photo-upload', photoUploadResponseSchema, {
+    body: { stage, attemptId },
+  });
+
+export const submitPhoto = (stage: number, attemptId: string): Promise<TeamState> =>
+  request('POST', '/teams/me/current/photo', teamStateSchema, { body: { stage, attemptId } });
+
+export const videoCall = (stage: number, attemptId: string): Promise<TeamState> =>
+  request('POST', '/teams/me/current/video-call', teamStateSchema, { body: { stage, attemptId } });
+
 export const answer = (stage: number, attemptId: string, value: Answer): Promise<AnswerResponse> =>
   request('POST', '/teams/me/current/answer', answerResponseSchema, {
     body: { stage, attemptId, ...value },
