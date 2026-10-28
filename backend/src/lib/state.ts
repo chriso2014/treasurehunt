@@ -1,6 +1,6 @@
-import type { GameStatus, Question, TeamState } from '@treasurehunt/shared';
+import type { GameContent, GameStatus, Question, TeamState } from '@treasurehunt/shared';
 import { getGameStatus, loadTeam, type TeamRecord } from './game.js';
-import { getQuestion, getRoute } from './content.js';
+import { getContentConfig, getQuestion, getRoute, penaltyFor } from './content.js';
 import { clock } from './clock.js';
 import { viewUrl } from './s3.js';
 import { elapsedMs } from './timer.js';
@@ -13,6 +13,7 @@ export type StateInput = {
   gameStatus: GameStatus;
   record: TeamRecord;
   stageCount: number;
+  contentConfig: GameContent['config'];
   /** Questions of the team's current and finished stages, by id. */
   questions: Map<string, Question>;
   now: Date;
@@ -23,7 +24,7 @@ const optionalUrl = (signUrl: StateInput['signUrl'], key: string | undefined) =>
   key ? signUrl(key) : Promise.resolve(null);
 
 export const buildState = async (input: StateInput): Promise<TeamState> => {
-  const { gameStatus, record, stageCount, questions, now, signUrl } = input;
+  const { gameStatus, record, stageCount, contentConfig, questions, now, signUrl } = input;
   const { profile } = record;
 
   const done = record.stages
@@ -80,6 +81,8 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
         serverTime: now.toISOString(),
       },
       penaltyMs: stage.penaltyMs,
+      hintPenaltyMs: penaltyFor('hint', question, contentConfig),
+      skipPenaltyMs: penaltyFor('skip', question, contentConfig),
       hintUsed: stage.hintUsed,
       canSkip: stage.hintUsed && stage.status === 'revealed' && question.type !== 'video_call',
       lastResult: latest ? { result: latest.result, reason: latest.reason ?? null } : null,
@@ -106,7 +109,10 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
 /** Loads everything for the caller's state from DynamoDB (+ cached content) and builds it. */
 export const loadState = async (teamId: string): Promise<TeamState> => {
   const [gameStatus, record] = await Promise.all([getGameStatus(), loadTeam(teamId)]);
-  const route = await getRoute(record.profile.route);
+  const [route, contentConfig] = await Promise.all([
+    getRoute(record.profile.route),
+    getContentConfig(),
+  ]);
   const ids = new Set(record.stages.map((s) => s.questionId));
   const questions = new Map(
     await Promise.all([...ids].map(async (id) => [id, await getQuestion(id)] as const)),
@@ -115,6 +121,7 @@ export const loadState = async (teamId: string): Promise<TeamState> => {
     gameStatus,
     record,
     stageCount: route.length,
+    contentConfig,
     questions,
     now: clock.now(),
     signUrl: viewUrl,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { teamStateSchema, type Question } from '@treasurehunt/shared';
 import { buildState, type StateInput } from '../src/lib/state.js';
-import { attempt, profile, q1, q2, q4, record, stage } from './fixtures.js';
+import { attempt, contentConfig, profile, q1, q2, q4, record, stage } from './fixtures.js';
 
 const now = new Date('2026-10-28T10:10:00.000Z');
 const questions = new Map<string, Question>([
@@ -14,6 +14,7 @@ const build = (overrides: Partial<StateInput>) =>
     gameStatus: 'live',
     record: record(),
     stageCount: 3,
+    contentConfig,
     questions,
     now,
     signUrl: async (key) => `https://signed/${key}`,

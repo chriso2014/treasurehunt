@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { TeamState } from '@treasurehunt/shared';
-import { ApiError, answer, reveal, type Answer } from '../api/client.js';
+import { ApiError, answer, hint, reveal, skip, type Answer } from '../api/client.js';
 import { Button, ErrorMessage, SafeImage, Screen } from '../components/ui.js';
 import { errorText } from '../lib/errors.js';
 import { formatDuration, useTicker } from '../lib/time.js';
@@ -49,6 +49,26 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
     if (!window.confirm('The timer starts as soon as you reveal the question. Reveal now?')) return;
     setFlash('');
     void act(async () => onState(await reveal(current.stage)));
+  };
+
+  const doHint = () => {
+    const penalty = formatDuration(current.hintPenaltyMs);
+    if (!window.confirm(`Using the hint adds ${penalty} to your time. Show the hint?`)) return;
+    void act(async () => onState(await hint(current.stage)));
+  };
+
+  const doSkip = () => {
+    const penalty = formatDuration(current.skipPenaltyMs);
+    if (
+      !window.confirm(`Skipping adds ${penalty} to your time and moves you to the next clue. Skip?`)
+    )
+      return;
+    setFlash('');
+    void act(async () => {
+      const next = await skip(current.stage);
+      if (next.current?.stage !== current.stage) setFlash('Skipped. Here’s your next clue.');
+      onState(next);
+    });
   };
 
   const submit = (value: Answer, attemptId: string) =>
@@ -114,6 +134,16 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
         </section>
       )}
 
+      {current.hint && (
+        <section className="flex flex-col gap-3 rounded-2xl bg-slate-800 p-4">
+          <h2 className="text-sm uppercase tracking-wide text-slate-400">Hint</h2>
+          {current.hint.imageUrl && (
+            <SafeImage src={current.hint.imageUrl} alt="Hint" className="w-full rounded-xl" />
+          )}
+          {current.hint.text && <p className="text-xl leading-snug">{current.hint.text}</p>}
+        </section>
+      )}
+
       {current.status === 'revealed' && (
         <>
           {current.lastResult?.result === 'wrong' && (
@@ -123,6 +153,16 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
             </p>
           )}
           <AnswerForm current={current} busy={busy} onSubmit={submit} />
+          {!current.hintUsed && (
+            <Button variant="secondary" onClick={doHint} busy={busy}>
+              Use hint (+{formatDuration(current.hintPenaltyMs)})
+            </Button>
+          )}
+          {current.canSkip && (
+            <Button variant="secondary" onClick={doSkip} busy={busy}>
+              Skip this question (+{formatDuration(current.skipPenaltyMs)})
+            </Button>
+          )}
         </>
       )}
 

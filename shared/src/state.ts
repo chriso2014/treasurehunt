@@ -51,6 +51,9 @@ export const currentStageSchema = z.object({
   hint: z.object({ text: z.string().nullable(), ...shownImage }).nullable(),
   timer: z.object({ elapsedMs: z.number(), running: z.boolean(), serverTime: z.string() }),
   penaltyMs: z.number(),
+  /** What using the hint / skipping would add, for the confirm dialogs. */
+  hintPenaltyMs: z.number(),
+  skipPenaltyMs: z.number(),
   hintUsed: z.boolean(),
   canSkip: z.boolean(),
   /** Outcome of the latest attempt at this stage, e.g. a wrong answer. */

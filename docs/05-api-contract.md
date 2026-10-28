@@ -25,8 +25,8 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
 | `GET /teams/me/state` | none | Current screen data (polled while waiting for start or review) |
 | `POST /teams/me/current/reveal` | `{ stage }` | `clue` → `revealed`, start timer. Returns `state`. Repeating it is harmless |
 | `POST /teams/me/current/answer` | `{ stage, attemptId, optionId }` or `{ stage, attemptId, text }` | Check; wrong: +penalty; correct: complete stage. Returns `{ correct, state }`; `correct` is null if the request was a late retry for a stage already finished |
-| `POST /teams/me/current/hint` | none | +penalty, returns hint (idempotent once used) |
-| `POST /teams/me/current/skip` | none | Requires hint used, not on `video_call`; +penalty; next stage |
+| `POST /teams/me/current/hint` | `{ stage }` | Only while `revealed`: `hintUsed`, +hint penalty (once). Returns `state` with `hint` filled in. Repeating it is harmless |
+| `POST /teams/me/current/skip` | `{ stage }` | Requires hint used, status `revealed`, not `video_call` (else 409); +skip penalty, stage `skipped`, next clue. Returns `state`. A late retry returns the current state |
 | `POST /teams/me/current/photo-upload` | none | Pre-signed POST for a submission photo |
 | `POST /teams/me/current/photo` | `{ key }` | Pause timer, `awaiting_review`, queue for GM |
 | `POST /teams/me/current/video-call` | none | Pause timer, `awaiting_review`, queue for GM; returns WhatsApp link |
@@ -45,7 +45,7 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
     "question": { "text": "...", "imageUrl": null, "options": null },
     "hint": null,
     "timer": { "elapsedMs": 95000, "running": true, "serverTime": "2026-...Z" },
-    "penaltyMs": 300000, "hintUsed": false, "canSkip": false,
+    "penaltyMs": 300000, "hintPenaltyMs": 300000, "skipPenaltyMs": 300000, "hintUsed": false, "canSkip": false,
     "lastResult": { "result": "declined", "reason": "Whole team must be in shot" },
     "whatsappUrl": null
   },
@@ -54,7 +54,7 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
 ```
 - `team.photoUrl`: pre-signed view URL of the team photo, or null before one is confirmed (the client then asks for a photo).
 - `current` is null before the start and after the team finishes. `current.stage` is the stage number to send with actions.
-- `question` is null until revealed. `hint` is null until used. Correct answers are never included.
+- `question` is null until revealed. `hint` is null until used. `hintPenaltyMs`/`skipPenaltyMs` are what using the hint or skipping would add, for the confirm dialogs. Correct answers are never included.
 - The client shows a live timer by counting up locally from `elapsedMs`, using `serverTime` to correct clock skew, and re-syncs on every response.
 
 ## Game master (provisional, refined in the admin round)
