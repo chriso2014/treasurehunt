@@ -40,7 +40,7 @@ The file is validated by `gameContentSchema` in `shared/src/content.ts` (field t
 | `GAME` | `STATE` | `status`: `registration` / `live` / `finished`; `startedAt`; `resultsPublished`; `registrationCounter`; `tieBreakOrder?` |
 | `TEAM#<teamId>` | `PROFILE` | Team record |
 | `TEAM#<teamId>` | `STAGE#<nn>` | One per stage the team has reached |
-| `TEAM#<teamId>` | `ATTEMPT#<nn>#<timestamp>` | Every submission (answer, photo, video call) |
+| `TEAM#<teamId>` | `ATTEMPT#<nn>#<attemptId>` | Every submission (answer, photo, video call). `attemptId` is a UUID the client makes once per submission, so a retry hits the same key and is applied once; order by `submittedAt` |
 
 `teamId` = Cognito `sub`.
 
@@ -67,7 +67,7 @@ outcome?: correct | approved | declined | skipped | gm_accepted
 
 ### Attempt
 ```
-stage, questionId, type, submittedAt,
+stage, attemptId, questionId, type, submittedAt,
 value?        // option id or text
 photoKey?     // photo submissions
 result: correct | wrong | pending | approved | declined | gm_accepted,

@@ -1,11 +1,13 @@
 import type { z } from 'zod';
 import {
+  answerResponseSchema,
   errorResponseSchema,
   healthResponseSchema,
   photoConfirmResponseSchema,
   photoUploadResponseSchema,
   registerTeamResponseSchema,
   teamStateSchema,
+  type AnswerResponse,
   type ErrorCode,
   type HealthResponse,
   type PhotoConfirmResponse,
@@ -88,6 +90,17 @@ export const confirmPhoto = (key: string): Promise<PhotoConfirmResponse> =>
 
 export const getState = (): Promise<TeamState> =>
   request('GET', '/teams/me/state', teamStateSchema);
+
+export const reveal = (stage: number): Promise<TeamState> =>
+  request('POST', '/teams/me/current/reveal', teamStateSchema, { body: { stage } });
+
+export type Answer = { optionId: string } | { text: string };
+
+/** attemptId is made once per submission and reused on retries, so it counts once. */
+export const answer = (stage: number, attemptId: string, value: Answer): Promise<AnswerResponse> =>
+  request('POST', '/teams/me/current/answer', answerResponseSchema, {
+    body: { stage, attemptId, ...value },
+  });
 
 /** Uploads a file straight to S3 with a pre-signed POST (ADR-005). */
 export const uploadToS3 = async (upload: PhotoUploadResponse, file: Blob): Promise<void> => {
