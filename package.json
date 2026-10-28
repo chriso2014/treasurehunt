@@ -15,9 +15,9 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "frontend:env": "npm run frontend:env -w backend --",
-    "seed": "npm run seed -w backend --",
-    "create-gm": "npm run create-gm -w backend --"
+    "frontend:env": "tsx backend/scripts/write-frontend-env.ts",
+    "seed": "tsx backend/scripts/seed.ts",
+    "create-gm": "tsx backend/scripts/create-gm.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
