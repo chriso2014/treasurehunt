@@ -15,6 +15,6 @@ Each phase should fit in one or two Claude sessions and ends with something test
 | 6 | Photo + dance questions | Submission photo upload, `awaiting_review` pause, WhatsApp link from SSM; team polling while waiting | Done |
 | 7 | Admin console | `/admin`: leaderboard, review queue with approve/decline + reason, accept text answer, route override, tie-break, publish results; GM polling; public `/results` | Done (A9 time adjustment left out until needed) |
 | 8 | Map + finished screen | Leaflet map of completed locations; finished screen with total | Done |
-| 9 | Hardening + rehearsal | Retry/double-tap safety verified; `e2e:dev` passes; alarms; prod deploy; real content seeded; rehearsal in Hitchin on iOS + Android | In progress: `reset` + `e2e:dev` scripts, API 5xx/latency alarms, access logs built; still to do: run e2e on dev, prod deploy, real content, rehearsal |
+| 9 | Hardening + rehearsal | Retry/double-tap safety verified; `e2e:dev` passes; alarms; prod deploy; real content seeded; rehearsal in Hitchin on iOS + Android | In progress: `reset` + `e2e:dev` scripts, API 5xx/latency alarms, access logs built; `e2e:dev` passes (165 checks; first run found a double-tap answer bug, fixed). Still to do: prod deploy, real content, rehearsal |
 | 9b | Optional: cartoon team photo | Provider tested and chosen (ADR-010); async `stylisePhoto` Lambda; fallback to original | Not started (decide provider first) |
 | 10 | Post-event cleanup | Results shared; `cleanup` script run on prod; stacks deleted or kept | Not started |
