@@ -1,0 +1,127 @@
+{
+  "_comment": "Example shape only. Copy to content/game.private.json (gitignored) with the real content, then run: npm run seed",
+  "config": {
+    "title": "Hitchin Treasure Hunt",
+    "defaultPenaltyMs": 300000,
+    "map": {
+      "centre": {
+        "lat": 51.949,
+        "lng": -0.28
+      },
+      "zoom": 15
+    }
+  },
+  "routes": {
+    "A": [
+      "q1",
+      "q2",
+      "q3",
+      "q4"
+    ],
+    "B": [
+      "q3",
+      "q1",
+      "q2",
+      "q4"
+    ]
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple_choice",
+      "location": {
+        "name": "Example Square",
+        "lat": 51.949,
+        "lng": -0.281
+      },
+      "clue": {
+        "text": "Where the market once met..."
+      },
+      "question": {
+        "text": "What colour is the door?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": "Red"
+        },
+        {
+          "id": "b",
+          "text": "Blue"
+        },
+        {
+          "id": "c",
+          "text": "Green"
+        }
+      ],
+      "correctOptionId": "b",
+      "hint": {
+        "text": "Look up."
+      }
+    },
+    {
+      "id": "q2",
+      "type": "free_text",
+      "location": {
+        "name": "Example Church",
+        "lat": 51.948,
+        "lng": -0.279
+      },
+      "clue": {
+        "text": "Bells and a spire...",
+        "imageKey": "content/q2-clue.jpg"
+      },
+      "question": {
+        "text": "What year is carved above the door?"
+      },
+      "acceptedAnswers": [
+        "1850"
+      ],
+      "matching": {
+        "numeric": {
+          "value": 1850,
+          "tolerance": 0
+        }
+      },
+      "hint": {
+        "text": "It's on the left."
+      }
+    },
+    {
+      "id": "q3",
+      "type": "photo",
+      "location": {
+        "name": "Example Bridge",
+        "lat": 51.95,
+        "lng": -0.277
+      },
+      "clue": {
+        "text": "Cross the water..."
+      },
+      "question": {
+        "text": "Take a photo of the whole team pulling your best troll faces on the bridge."
+      },
+      "hint": {
+        "text": "Everyone must be in shot."
+      }
+    },
+    {
+      "id": "q4",
+      "type": "video_call",
+      "location": {
+        "name": "Example Finish",
+        "lat": 51.947,
+        "lng": -0.282
+      },
+      "clue": {
+        "text": "Final stop..."
+      },
+      "question": {
+        "text": "Video call the game master and perform the team dance!"
+      },
+      "hint": {
+        "text": "Practise first!"
+      }
+    }
+  ]
+}
