@@ -89,6 +89,7 @@ A repeated decision (double tap) fails the condition and returns the current sta
 No WebSockets. Clients poll only when something can change without them acting:
 - Team waiting for the game to start: `GET /teams/me/state` every 5 s.
 - Team in `awaiting_review` (photo/dance): `GET /teams/me/state` every 3 s.
+- Team on any other stage while the game is live: every 5 s (GM-accepted answers, game ended).
 - GM on `/admin`: `GET /admin/reviews` and `GET /admin/teams` every 5 s.
 
 Polling pauses when the page is hidden and re-fetches immediately on screen wake and when the network returns. It lives in one client module, so WebSockets could be added later without touching screens.

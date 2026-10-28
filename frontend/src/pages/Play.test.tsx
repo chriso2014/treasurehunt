@@ -70,6 +70,7 @@ const state = (c: CurrentStage | null, totalMs = 0): TeamState => ({
   current: c,
   completedLocations: [],
   map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
+  serverTime: '2026-10-28T10:00:00.000Z',
   results: [],
 });
 

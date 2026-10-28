@@ -5,6 +5,7 @@ import { getAccessToken, signOutTeam } from './auth/index.js';
 import { ErrorMessage, Screen, Button } from './components/ui.js';
 import { errorText } from './lib/errors.js';
 import { usePolling } from './lib/poller.js';
+import { IMAGE_URL_REUSE_MS, keepImageUrls } from './lib/state-merge.js';
 import { Finished } from './pages/Finished.js';
 import { Play } from './pages/Play.js';
 import { Register } from './pages/Register.js';
@@ -17,14 +18,39 @@ type View =
   | { name: 'register' }
   | { name: 'signin' }
   | { name: 'error'; message: string }
-  | { name: 'team'; state: TeamState; receivedAt: number; changingPhoto?: boolean };
+  | {
+      name: 'team';
+      state: TeamState;
+      receivedAt: number;
+      /** When the image URLs on screen were signed; 0 forces fresh ones. */
+      imagesAt: number;
+      changingPhoto?: boolean;
+    };
 
 const WAITING_POLL_MS = 5000;
 const REVIEW_POLL_MS = 3000;
+/** While playing, so GM decisions (accepted answer, game ended) show without a tap. */
+const PLAYING_POLL_MS = 5000;
 
 // Screens render from the server state; the only local choice is which form to show when signed out.
 export const App = () => {
   const [view, setView] = useState<View>({ name: 'loading' });
+
+  /** Polls and action responses can arrive out of order: the newest server state wins. */
+  const show = useCallback((next: TeamState) => {
+    const now = Date.now();
+    setView((v) => {
+      if (v.name !== 'team') return { name: 'team', state: next, receivedAt: now, imagesAt: now };
+      if (next.serverTime < v.state.serverTime) return v;
+      const reuse = now - v.imagesAt < IMAGE_URL_REUSE_MS;
+      return {
+        ...v,
+        state: reuse ? keepImageUrls(v.state, next) : next,
+        receivedAt: now,
+        imagesAt: reuse ? v.imagesAt : now,
+      };
+    });
+  }, []);
 
   const load = useCallback(async () => {
     if (!(await getAccessToken())) {
@@ -32,14 +58,7 @@ export const App = () => {
       return;
     }
     try {
-      const state = await getState();
-      const receivedAt = Date.now();
-      setView((v) => ({
-        name: 'team',
-        state,
-        receivedAt,
-        changingPhoto: v.name === 'team' && v.changingPhoto,
-      }));
+      show(await getState());
     } catch (err) {
       if (err instanceof ApiError && (err.code === 'UNAUTHENTICATED' || err.code === 'NOT_FOUND')) {
         await signOutTeam();
@@ -48,7 +67,7 @@ export const App = () => {
       }
       setView((v) => (v.name === 'team' ? v : { name: 'error', message: errorText(err) }));
     }
-  }, []);
+  }, [show]);
 
   useEffect(() => void load(), [load]);
 
@@ -58,7 +77,12 @@ export const App = () => {
     view.state.team.photoUrl !== null &&
     !view.changingPhoto;
   const inReview = view.name === 'team' && view.state.current?.status === 'awaiting_review';
-  usePolling(load, waiting ? WAITING_POLL_MS : inReview ? REVIEW_POLL_MS : null);
+  const playing =
+    view.name === 'team' && view.state.game.status === 'live' && view.state.current !== null;
+  usePolling(
+    load,
+    waiting ? WAITING_POLL_MS : inReview ? REVIEW_POLL_MS : playing ? PLAYING_POLL_MS : null,
+  );
 
   const signOut = async () => {
     await signOutTeam();
@@ -85,14 +109,7 @@ export const App = () => {
         return <Finished state={state} />;
       }
       if (state.team.status === 'playing' && state.current) {
-        return (
-          <Play
-            state={state}
-            receivedAt={view.receivedAt}
-            onState={(next) => setView({ name: 'team', state: next, receivedAt: Date.now() })}
-            onReload={load}
-          />
-        );
+        return <Play state={state} receivedAt={view.receivedAt} onState={show} onReload={load} />;
       }
       if (state.game.status !== 'registration') {
         return (
@@ -107,7 +124,8 @@ export const App = () => {
           <TeamPhoto
             teamName={state.team.name}
             onDone={() => {
-              setView({ ...view, changingPhoto: false });
+              // Same S3 key as the old photo, so take a fresh URL rather than the cached one.
+              setView({ ...view, changingPhoto: false, imagesAt: 0 });
               void load();
             }}
             onCancel={

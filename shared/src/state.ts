@@ -98,5 +98,7 @@ export const teamStateSchema = z.object({
   map: z.object({ centre: z.object({ lat: z.number(), lng: z.number() }), zoom: z.number() }),
   /** Finished stages in order, for the breakdown of the team's time. */
   results: z.array(stageResultSchema),
+  /** When the server built this state: the client keeps whichever response is newest. */
+  serverTime: z.string(),
 });
 export type TeamState = z.infer<typeof teamStateSchema>;

@@ -18,6 +18,7 @@ const state: TeamState = {
   current: null,
   completedLocations: [],
   map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
+  serverTime: '2026-10-28T10:00:00.000Z',
   results: [
     { stage: 1, outcome: 'correct', timeMs: 120_000, penaltyMs: 0, penalties: [] },
     {
