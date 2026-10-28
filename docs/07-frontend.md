@@ -30,7 +30,7 @@ Admin console is in the same app at `/admin`, designed to work on a phone (the G
 | team `finished` | Finished screen with total time, a map of where the team went; "See more about your time" opens each question's time and penalties (`state.results`) |
 
 ## Live updates (polling, ADR-007)
-- Team: poll `GET /teams/me/state` every 5 s while waiting for the game to start, and every 3 s while `awaiting_review`. Otherwise use the `state` returned by each action.
+- Team: poll `GET /teams/me/state` every 5 s while waiting for the game to start, and every 3 s while `awaiting_review`, and every 5 s on any other stage while the game is live (so a GM-accepted answer or the GM ending the game shows up). Each action's returned `state` is used at once, and a poll that started before it is dropped.
 - GM `/admin`: poll the review queue and leaderboard every 5 s.
 - Pause polling when the page is hidden; re-fetch on `visibilitychange` and `online`.
 - All polling in one module (`usePolling`/`poller`) so it can be replaced later.

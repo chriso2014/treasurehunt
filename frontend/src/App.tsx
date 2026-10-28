@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TeamState } from '@treasurehunt/shared';
 import { ApiError, getState } from './api/client.js';
 import { getAccessToken, signOutTeam } from './auth/index.js';
@@ -21,10 +21,14 @@ type View =
 
 const WAITING_POLL_MS = 5000;
 const REVIEW_POLL_MS = 3000;
+/** While playing, so GM decisions (accepted answer, game ended) show without a tap. */
+const PLAYING_POLL_MS = 5000;
 
 // Screens render from the server state; the only local choice is which form to show when signed out.
 export const App = () => {
   const [view, setView] = useState<View>({ name: 'loading' });
+  // Bumped by every action response; a poll that started before one is stale and dropped.
+  const updates = useRef(0);
 
   const load = useCallback(async () => {
     if (!(await getAccessToken())) {
@@ -32,7 +36,10 @@ export const App = () => {
       return;
     }
     try {
+      const started = updates.current;
       const state = await getState();
+      if (updates.current !== started) return;
+      updates.current++;
       const receivedAt = Date.now();
       setView((v) => ({
         name: 'team',
@@ -58,7 +65,12 @@ export const App = () => {
     view.state.team.photoUrl !== null &&
     !view.changingPhoto;
   const inReview = view.name === 'team' && view.state.current?.status === 'awaiting_review';
-  usePolling(load, waiting ? WAITING_POLL_MS : inReview ? REVIEW_POLL_MS : null);
+  const playing =
+    view.name === 'team' && view.state.game.status === 'live' && view.state.current !== null;
+  usePolling(
+    load,
+    waiting ? WAITING_POLL_MS : inReview ? REVIEW_POLL_MS : playing ? PLAYING_POLL_MS : null,
+  );
 
   const signOut = async () => {
     await signOutTeam();
@@ -89,7 +101,10 @@ export const App = () => {
           <Play
             state={state}
             receivedAt={view.receivedAt}
-            onState={(next) => setView({ name: 'team', state: next, receivedAt: Date.now() })}
+            onState={(next) => {
+              updates.current++;
+              setView({ name: 'team', state: next, receivedAt: Date.now() });
+            }}
             onReload={load}
           />
         );

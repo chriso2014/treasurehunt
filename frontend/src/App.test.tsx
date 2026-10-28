@@ -5,6 +5,7 @@ import type { TeamState } from '@treasurehunt/shared';
 import { App } from './App.js';
 import * as client from './api/client.js';
 import * as auth from './auth/index.js';
+import { usePolling } from './lib/poller.js';
 
 vi.mock('./auth/index.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./auth/index.js')>()),
@@ -12,6 +13,8 @@ vi.mock('./auth/index.js', async (importOriginal) => ({
   signInTeam: vi.fn(),
   signOutTeam: vi.fn(),
 }));
+vi.mock('./lib/poller.js', () => ({ usePolling: vi.fn() }));
+vi.mock('./pages/Play.js', () => ({ Play: () => <p>Playing</p> }));
 vi.mock('./api/client.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./api/client.js')>()),
   getState: vi.fn(),
@@ -131,5 +134,36 @@ describe('App after the game ends', () => {
     vi.mocked(client.getState).mockResolvedValue(state({ status: 'playing' }, 'finished'));
     render(<App />);
     expect(await screen.findByText('The game master has ended the game.')).toBeInTheDocument();
+  });
+});
+
+describe('App polling', () => {
+  const lastInterval = () => vi.mocked(usePolling).mock.calls.at(-1)?.[1];
+
+  it('keeps checking while a team is playing, so GM decisions show up', async () => {
+    vi.mocked(client.getState).mockResolvedValue({
+      ...state({ status: 'playing' }, 'live'),
+      current: { status: 'revealed' } as TeamState['current'],
+    });
+    render(<App />);
+    expect(await screen.findByText('Playing')).toBeInTheDocument();
+    expect(lastInterval()).toBe(5000);
+  });
+
+  it('checks faster while a submission is being reviewed', async () => {
+    vi.mocked(client.getState).mockResolvedValue({
+      ...state({ status: 'playing' }, 'live'),
+      current: { status: 'awaiting_review' } as TeamState['current'],
+    });
+    render(<App />);
+    expect(await screen.findByText('Playing')).toBeInTheDocument();
+    expect(lastInterval()).toBe(3000);
+  });
+
+  it('stops once the team has finished', async () => {
+    vi.mocked(client.getState).mockResolvedValue(state({ status: 'finished' }, 'live'));
+    render(<App />);
+    expect(await screen.findByText('Finished!')).toBeInTheDocument();
+    expect(lastInterval()).toBeNull();
   });
 });
