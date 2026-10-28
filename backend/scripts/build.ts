@@ -28,8 +28,8 @@ await Promise.all(
       target: 'node22',
       format: 'esm',
       sourcemap: true,
-      // The Lambda runtime ships AWS SDK v3.
-      external: ['@aws-sdk/*'],
+      minify: true,
+      // AWS SDK v3 is bundled too, so presigners and lib-dynamodb are pinned to our versions.
       banner: {
         js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
       },

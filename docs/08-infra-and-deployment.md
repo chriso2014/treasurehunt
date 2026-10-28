@@ -11,8 +11,8 @@ Environments: **`dev`** (build and test) and **`prod`** (the event), in the same
 Domain: default `*.cloudfront.net` address (no custom domain for now).
 
 ## Cross-stack config
-- Backend stack outputs: `ApiUrl`, `UserPoolId`, `UserPoolClientId`, `Region`, `AssetsBucket`.
-- `npm run frontend:env -- <env>` reads these outputs and writes `frontend/.env.<env>` (gitignored).
+- Backend stack outputs: `ApiUrl`, `UserPoolId`, `UserPoolClientId`, `Region`, `ContentTable`, `GameTable`, `AssetsBucket`.
+- `npm run frontend:env -- <env>` reads these outputs and writes `frontend/.env.<env>` (gitignored): `VITE_ENV`, `VITE_API_URL`, `VITE_REGION`, `VITE_USER_POOL_ID`, `VITE_USER_POOL_CLIENT_ID`.
 - Backend needs the frontend's CloudFront URL for CORS: passed as a SAM parameter `AllowedOrigin` (set after the first frontend deploy).
 - SSM parameters under `/treasurehunt/<env>/`: `gm-whatsapp-number`, `default-penalty-ms`.
 
@@ -34,7 +34,7 @@ npm run frontend:env -- dev && npm run deploy -w frontend -- dev   # vite build,
 # content and GM user
 npm run seed -- dev            # loads content/game.private.json (or pass a file: npm run seed -- dev content/game.example.json)
 npm run seed -- --check        # validate the content file only, no AWS
-npm run create-gm -- dev       # creates the GM user in the gamemaster group (prompts for password)
+npm run create-gm -- dev       # creates (or resets) user `gamemaster` in the gamemaster group; prompts for the password. Optional 2nd arg: username
 ```
 First deploy of an env: frontend stack (`deploy:stack`, gives the `SiteUrl`) → put `AllowedOrigin=<SiteUrl>` in that env's `parameter_overrides` in `backend/samconfig.toml` → backend → frontend app (`frontend:env` + `deploy`) → seed → create GM. Prod's CORS needs a real origin, so never deploy the prod backend before `AllowedOrigin` is set. A backend deploy without `AllowedOrigin` leaves CORS allowing localhost only (dev).
 

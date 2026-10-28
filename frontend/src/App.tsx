@@ -1,24 +1,106 @@
-import { useEffect, useState } from 'react';
-import { getHealth } from './api/client.js';
+import { useCallback, useEffect, useState } from 'react';
+import type { TeamState } from '@treasurehunt/shared';
+import { ApiError, getState } from './api/client.js';
+import { getAccessToken, signOutTeam } from './auth/index.js';
+import { ErrorMessage, Screen, Button } from './components/ui.js';
+import { errorText } from './lib/errors.js';
+import { usePolling } from './lib/poller.js';
+import { Register } from './pages/Register.js';
+import { SignIn } from './pages/SignIn.js';
+import { TeamPhoto } from './pages/TeamPhoto.js';
+import { Waiting } from './pages/Waiting.js';
 
-type ApiStatus = 'checking' | 'ok' | 'unreachable';
+type View =
+  | { name: 'loading' }
+  | { name: 'register' }
+  | { name: 'signin' }
+  | { name: 'error'; message: string }
+  | { name: 'team'; state: TeamState; changingPhoto?: boolean };
 
+const WAITING_POLL_MS = 5000;
+
+// Screens render from the server state; the only local choice is which form to show when signed out.
 export const App = () => {
-  const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
+  const [view, setView] = useState<View>({ name: 'loading' });
 
-  useEffect(() => {
-    getHealth()
-      .then(() => setApiStatus('ok'))
-      .catch(() => setApiStatus('unreachable'));
+  const load = useCallback(async () => {
+    if (!(await getAccessToken())) {
+      setView((v) => (v.name === 'signin' ? v : { name: 'register' }));
+      return;
+    }
+    try {
+      const state = await getState();
+      setView((v) => ({
+        name: 'team',
+        state,
+        changingPhoto: v.name === 'team' && v.changingPhoto,
+      }));
+    } catch (err) {
+      if (err instanceof ApiError && (err.code === 'UNAUTHENTICATED' || err.code === 'NOT_FOUND')) {
+        await signOutTeam();
+        setView({ name: 'signin' });
+        return;
+      }
+      setView((v) => (v.name === 'team' ? v : { name: 'error', message: errorText(err) }));
+    }
   }, []);
 
-  return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-slate-900 p-6 text-center text-white">
-      <h1 className="text-4xl font-bold">Hitchin Treasure Hunt</h1>
-      <p className="text-lg text-slate-300">Hello! The game is on its way.</p>
-      <p className="text-sm text-slate-400" data-testid="api-status">
-        API: {apiStatus}
-      </p>
-    </main>
-  );
+  useEffect(() => void load(), [load]);
+
+  const waiting =
+    view.name === 'team' &&
+    view.state.game.status === 'registration' &&
+    view.state.team.photoUrl !== null &&
+    !view.changingPhoto;
+  usePolling(load, waiting ? WAITING_POLL_MS : null);
+
+  const signOut = async () => {
+    await signOutTeam();
+    setView({ name: 'signin' });
+  };
+
+  switch (view.name) {
+    case 'loading':
+      return <Screen title="Hitchin Treasure Hunt">{null}</Screen>;
+    case 'register':
+      return <Register onSignedIn={load} onShowSignIn={() => setView({ name: 'signin' })} />;
+    case 'signin':
+      return <SignIn onSignedIn={load} onShowRegister={() => setView({ name: 'register' })} />;
+    case 'error':
+      return (
+        <Screen title="Hitchin Treasure Hunt">
+          <ErrorMessage>{view.message}</ErrorMessage>
+          <Button onClick={() => void load()}>Try again</Button>
+        </Screen>
+      );
+    case 'team': {
+      const { state } = view;
+      if (state.game.status !== 'registration') {
+        return (
+          <Screen title={state.team.name}>
+            <p className="text-center text-2xl">The game has started!</p>
+          </Screen>
+        );
+      }
+      if (state.team.photoUrl === null || view.changingPhoto) {
+        return (
+          <TeamPhoto
+            teamName={state.team.name}
+            onDone={() => {
+              setView({ name: 'team', state });
+              void load();
+            }}
+            onCancel={view.changingPhoto ? () => setView({ name: 'team', state }) : undefined}
+          />
+        );
+      }
+      return (
+        <Waiting
+          state={state}
+          onChangePhoto={() => setView({ name: 'team', state, changingPhoto: true })}
+          onSignOut={() => void signOut()}
+        />
+      );
+    }
+  }
 };

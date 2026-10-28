@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Hitchin Treasure Hunt backend (HTTP API, Lambdas, DynamoDB, assets bucket)
+Description: Hitchin Treasure Hunt backend (HTTP API, Lambdas, Cognito, DynamoDB, assets bucket)
 
 Parameters:
   Env:
@@ -26,11 +26,24 @@ Globals:
       Variables:
         ENV: !Ref Env
         NODE_OPTIONS: --enable-source-maps
+        GAME_TABLE: !Ref GameTable
+        CONTENT_TABLE: !Ref ContentTable
+        ASSETS_BUCKET: !Ref AssetsBucket
+        USER_POOL_ID: !Ref UserPool
+        POWERTOOLS_SERVICE_NAME: treasurehunt
 
 Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
+      Auth:
+        DefaultAuthorizer: Cognito
+        Authorizers:
+          Cognito:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+              audience: [!Ref UserPoolClient]
       # SAM drops the rest of CorsConfiguration if AllowOrigins is an !If, so each branch
       # carries the full config.
       CorsConfiguration: !If
@@ -46,6 +59,51 @@ Resources:
           AllowMethods: [GET, POST, OPTIONS]
           AllowHeaders: [authorization, content-type]
           MaxAge: 600
+
+  # Teams are created by the register Lambda (no self sign-up); the GM by scripts/create-gm.ts.
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub treasurehunt-${Env}
+      UsernameConfiguration:
+        CaseSensitive: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      # Light policy for a fun event; keep in step with passwordSchema in shared/src/team.ts.
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: false
+          RequireUppercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: admin_only
+            Priority: 1
+      MfaConfiguration: 'OFF'
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows: [ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 7
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+
+  GamemasterGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: gamemaster
+      Description: Game master (admin console)
 
   # Game content, loaded by `npm run seed`; read-only to the game Lambdas (docs/04-data-model.md).
   ContentTable:
@@ -136,6 +194,8 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /health
             Method: GET
+            Auth:
+              Authorizer: NONE
 
   HealthLogGroup:
     Type: AWS::Logs::LogGroup
@@ -143,11 +203,126 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${HealthFunction}
       RetentionInDays: 14
 
+  RegisterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/public-register
+      Events:
+        Post:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams
+            Method: POST
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminSetUserPassword
+                - cognito-idp:AdminDeleteUser
+              Resource: !GetAtt UserPool.Arn
+            - Effect: Allow
+              Action: [dynamodb:UpdateItem, dynamodb:PutItem]
+              Resource: !GetAtt GameTable.Arn
+
+  RegisterLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${RegisterFunction}
+      RetentionInDays: 14
+
+  TeamPhotoUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-photo-upload
+      Events:
+        Post:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/photo-upload
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt GameTable.Arn
+            # Signs the pre-signed POST; the browser does the upload.
+            - Effect: Allow
+              Action: s3:PutObject
+              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+
+  TeamPhotoUploadLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamPhotoUploadFunction}
+      RetentionInDays: 14
+
+  TeamPhotoConfirmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-photo-confirm
+      Events:
+        Post:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/photo-confirm
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: dynamodb:UpdateItem
+              Resource: !GetAtt GameTable.Arn
+            # HeadObject and the pre-signed view URL.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+
+  TeamPhotoConfirmLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamPhotoConfirmFunction}
+      RetentionInDays: 14
+
+  TeamStateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/team-state
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /teams/me/state
+            Method: GET
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:Query]
+              Resource: !GetAtt GameTable.Arn
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+
+  TeamStateLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TeamStateFunction}
+      RetentionInDays: 14
+
 Outputs:
   ApiUrl:
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
   Region:
     Value: !Ref AWS::Region
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
   ContentTable:
     Value: !Ref ContentTable
   GameTable:

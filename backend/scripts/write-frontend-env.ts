@@ -9,6 +9,8 @@ const vars: Record<string, string | undefined> = {
   VITE_ENV: env,
   VITE_API_URL: outputs.ApiUrl,
   VITE_REGION: outputs.Region,
+  VITE_USER_POOL_ID: outputs.UserPoolId,
+  VITE_USER_POOL_CLIENT_ID: outputs.UserPoolClientId,
 };
 
 const missing = Object.entries(vars).filter(([, v]) => !v);

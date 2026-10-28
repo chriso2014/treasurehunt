@@ -4,7 +4,7 @@ Base: `https://<api-id>.execute-api.eu-west-2.amazonaws.com`.
 Auth: `Authorization: Bearer <Cognito access token>` unless marked **public**.
 JSON in/out. Errors: `{ "error": { "code": "INVALID_STATE", "message": "..." } }`.
 
-Error codes: `VALIDATION` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `NOT_FOUND` (404), `INVALID_STATE` (409, wrong step, e.g. answer before reveal), `TEAM_NAME_TAKEN` (409), `GAME_NOT_LIVE` (409).
+Error codes: `VALIDATION` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `NOT_FOUND` (404), `INVALID_STATE` (409, wrong step, e.g. answer before reveal), `TEAM_NAME_TAKEN` (409), `GAME_NOT_LIVE` (409), `INTERNAL` (500, no details). Codes and request/response schemas live in `shared/src/` (zod).
 
 A wrong answer is **not** an error: it returns 200 with `correct: false`.
 
@@ -13,9 +13,9 @@ Every state-changing endpoint returns the updated **`state`** object (below), so
 ## Team: registration
 | Method & path | Auth | Body | Returns |
 |---------------|------|------|---------|
-| `POST /teams` | public | `{ name, password }` | `{ teamId, slug, route }` |
-| `POST /teams/me/photo-upload` | team | none | `{ url, fields, key }` (pre-signed POST) |
-| `POST /teams/me/photo-confirm` | team | `{ key }` | `{ photoUrl }` |
+| `POST /teams` | public | `{ name, password }` | 201 `{ teamId, slug, route }`. 409 `TEAM_NAME_TAKEN` if the slug exists; 409 `INVALID_STATE` once the game has started |
+| `POST /teams/me/photo-upload` | team | none | `{ url, fields, key }` (pre-signed POST, 5 min, `image/jpeg`, ≤5 MB, key `teams/{teamId}/team-photo.jpg`). Only before the game starts |
+| `POST /teams/me/photo-confirm` | team | `{ key }` | `{ photoUrl }` (15 min). Key must be the caller's own; 400 if the upload hasn't arrived |
 
 ## Team: gameplay
 | Method & path | Body | Effect |
@@ -50,6 +50,8 @@ Every state-changing endpoint returns the updated **`state`** object (below), so
   "completedLocations": [ { "name": "...", "lat": 51.95, "lng": -0.28 } ]
 }
 ```
+- `team.photoUrl`: pre-signed view URL of the team photo, or null before one is confirmed (the client then asks for a photo).
+- Until the game loop exists (phase 4), `current` is `null` and `completedLocations` is empty.
 - `question` is null until revealed. `hint` is null until used. Correct answers are never included.
 - The client shows a live timer by counting up locally from `elapsedMs`, using `serverTime` to correct clock skew, and re-syncs on every response.
 
