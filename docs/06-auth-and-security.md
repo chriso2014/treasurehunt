@@ -11,7 +11,7 @@
 - Username sign-in, **case-insensitive** usernames.
 - Self sign-up via Cognito **disabled**. Teams are created by the `registerTeam` Lambda (`AdminCreateUser` + `AdminSetUserPassword`), so there are no verification emails or SMS.
 - Password policy: min 8 chars, no complexity requirements (`template.yaml`; mirrored by `passwordSchema` in `shared/src/team.ts`).
-- App client: public SPA client (no secret); `USER_SRP_AUTH` + refresh token flow.
+- App client: public SPA client (no secret); `USER_SRP_AUTH` + refresh token flow. Dev also allows `ADMIN_USER_PASSWORD_AUTH` for the e2e script; it needs IAM credentials, so browsers can't use it.
 - Token validity: access/ID token 1 hour; refresh token 7 days (covers the event).
 
 ## API authorisation
