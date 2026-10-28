@@ -212,16 +212,16 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
 
       <ErrorMessage>{error}</ErrorMessage>
 
-      {state.completedLocations.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <LinkButton onClick={() => setShowMap((s) => !s)}>
-            {showMap
-              ? 'Hide map'
+      <section className="flex flex-col gap-3">
+        <LinkButton onClick={() => setShowMap((s) => !s)}>
+          {showMap
+            ? 'Hide map'
+            : state.completedLocations.length === 0
+              ? 'Map of Hitchin'
               : `Map of places you’ve found (${state.completedLocations.length})`}
-          </LinkButton>
-          {showMap && <MapView locations={state.completedLocations} start={state.map} />}
-        </section>
-      )}
+        </LinkButton>
+        {showMap && <MapView locations={state.completedLocations} start={state.map} />}
+      </section>
     </Screen>
   );
 };

@@ -10,6 +10,12 @@ type Props = {
 
 // Leaflet + OpenStreetMap (ADR-008). Only completed locations are ever sent by the server, so
 // the map can't give away where to go next. Circle markers avoid Leaflet's marker image files; a dashed line joins them in order.
+/** Text alternative: the places in the order found, since the tooltips aren't reachable. */
+const label = (locations: Props['locations']): string =>
+  locations.length === 0
+    ? 'Map of Hitchin'
+    : `Map of places you’ve found, in order: ${locations.map((l) => l.name).join(', ')}`;
+
 export const MapView = ({ locations, start }: Props) => {
   const element = useRef<HTMLDivElement>(null);
   // Rebuild only when the places change, not on every poll that brings an equal state.
@@ -54,7 +60,7 @@ export const MapView = ({ locations, start }: Props) => {
     <div
       ref={element}
       role="img"
-      aria-label={`Map of ${locations.length} place${locations.length === 1 ? '' : 's'} you’ve found`}
+      aria-label={label(locations)}
       className="h-72 w-full overflow-hidden rounded-2xl"
     />
   );

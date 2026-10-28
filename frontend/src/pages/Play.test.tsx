@@ -18,10 +18,7 @@ vi.mock('../api/client.js', async (importOriginal) => ({
 }));
 vi.mock('../components/MapView.js', () => ({
   MapView: ({ locations }: { locations: unknown[] }) => (
-    <div
-      role="img"
-      aria-label={`Map of ${locations.length} place${locations.length === 1 ? '' : 's'} you’ve found`}
-    />
+    <div role="img" aria-label={`Map with ${locations.length} found`} />
   ),
 }));
 vi.mock('../lib/image.js', () => ({ resizeToJpeg: vi.fn(async () => new Blob(['jpg'])) }));
@@ -383,8 +380,21 @@ describe('Play map', () => {
       completedLocations: [{ name: 'Market Place', lat: 51.949, lng: -0.281 }],
     };
     render(<Play state={s} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />);
-    expect(screen.queryByRole('img', { name: /Map of/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /Map with/ })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Map of places you’ve found (1)' }));
-    expect(screen.getByRole('img', { name: 'Map of 1 place you’ve found' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Map with 1 found' })).toBeInTheDocument();
+  });
+
+  it('offers the Hitchin map before any place is found', async () => {
+    render(
+      <Play
+        state={state(current())}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Map of Hitchin' }));
+    expect(screen.getByRole('img', { name: 'Map with 0 found' })).toBeInTheDocument();
   });
 });
