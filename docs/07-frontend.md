@@ -45,5 +45,5 @@ Admin console is in the same app at `/admin`, designed to work on a phone (the G
 React + Vite + TypeScript, Tailwind CSS, `aws-amplify/auth` (v6), Leaflet (plain, no wrapper; circle markers so no marker images, joined by a dashed line in the order found). No router: `main.tsx` picks the page by path. See `docs/09-coding-standards.md`.
 
 ## Look & feel
-- Header logo: an original "Greetings from Hitchin" postcard of St Mary's Church in a vintage travel-poster style (`src/assets/hitchin-postcard.svg`, flat colours, serif lettering). `Screen` shows it with `logo`; it is on the register, sign-in, loading/error and waiting screens, not during play, so the question stays on screen.
+- Header logo: a postcard-style picture of St Mary's Church and the Tudor shops in Hitchin with the town name in serif lettering (`src/assets/hitchin-postcard.jpg`, 1000px wide). `Screen` shows it with `logo`; it is on the register, sign-in, loading/error and waiting screens, not during play, so the question stays on screen.
 - Colours and theme otherwise TBD.
