@@ -1,6 +1,6 @@
 # Frontend
 
-> Status: agreed. Look & feel (colours, theme, on-screen name) TBD.
+> Status: agreed. Header logo done; other look & feel TBD.
 
 ## Hosting
 Static SPA built with Node.js tooling, deployed to S3 + CloudFront (ADR-002). One app serves both team and GM.
@@ -44,5 +44,6 @@ Admin console is in the same app at `/admin`, designed to work on a phone (the G
 ## Stack
 React + Vite + TypeScript, Tailwind CSS, `aws-amplify/auth` (v6), Leaflet (plain, no wrapper; circle markers so no marker images, joined by a dashed line in the order found). No router: `main.tsx` picks the page by path. See `docs/09-coding-standards.md`.
 
-## TBD
-Look & feel: colours, theme, name shown on screen.
+## Look & feel
+- Header logo: a postcard-style picture of St Mary's Church and the Tudor shops in Hitchin with the town name in serif lettering (`src/assets/hitchin-postcard.jpg`, 1000px wide). `Screen` shows it with `logo`; it is on the register, sign-in, loading/error and waiting screens, not during play, so the question stays on screen.
+- Colours and theme otherwise TBD.

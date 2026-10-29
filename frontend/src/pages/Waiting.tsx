@@ -4,7 +4,7 @@ import { Button, LinkButton, SafeImage, Screen } from '../components/ui.js';
 type Props = { state: TeamState; onChangePhoto: () => void; onSignOut: () => void };
 
 export const Waiting = ({ state, onChangePhoto, onSignOut }: Props) => (
-  <Screen title={state.team.name}>
+  <Screen title={state.team.name} logo>
     {state.team.photoUrl && (
       <SafeImage
         src={state.team.photoUrl}

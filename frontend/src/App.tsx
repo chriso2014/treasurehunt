@@ -91,14 +91,14 @@ export const App = () => {
 
   switch (view.name) {
     case 'loading':
-      return <Screen title="Hitchin Treasure Hunt">{null}</Screen>;
+      return <Screen logo>{null}</Screen>;
     case 'register':
       return <Register onSignedIn={load} onShowSignIn={() => setView({ name: 'signin' })} />;
     case 'signin':
       return <SignIn onSignedIn={load} onShowRegister={() => setView({ name: 'register' })} />;
     case 'error':
       return (
-        <Screen title="Hitchin Treasure Hunt">
+        <Screen logo>
           <ErrorMessage>{view.message}</ErrorMessage>
           <Button onClick={() => void load()}>Try again</Button>
         </Screen>
