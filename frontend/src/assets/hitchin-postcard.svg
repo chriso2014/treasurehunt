@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" role="img" aria-label="Greetings from Hitchin: Treasure Hunt">
+  <!-- Original illustration of St Mary's Church, Hitchin, in a vintage travel-poster style. -->
+  <defs>
+    <clipPath id="art"><rect x="16" y="16" width="568" height="388" rx="12"/></clipPath>
+  </defs>
+
+  <!-- Postcard card -->
+  <rect width="600" height="420" rx="22" fill="#f7ecd2"/>
+
+  <g clip-path="url(#art)">
+    <!-- Sky -->
+    <rect x="0" y="0" width="600" height="420" fill="#46bfd0"/>
+    <rect x="0" y="250" width="600" height="170" fill="#7fd3dc"/>
+
+    <!-- Clouds -->
+    <g fill="#ffffff">
+      <path d="M40 232 h120 a20 20 0 0 0 -24 -26 a26 26 0 0 0 -46 -6 a18 18 0 0 0 -30 14 a14 14 0 0 0 -20 18 z"/>
+      <path d="M372 196 h96 a16 16 0 0 0 -18 -22 a22 22 0 0 0 -40 -4 a16 16 0 0 0 -26 12 a12 12 0 0 0 -12 14 z"/>
+    </g>
+    <g fill="#d6f1f4">
+      <rect x="40" y="228" width="120" height="4"/>
+      <rect x="372" y="192" width="96" height="4"/>
+    </g>
+
+    <!-- Tree behind the church -->
+    <g>
+      <circle cx="150" cy="262" r="44" fill="#2f7048"/>
+      <circle cx="186" cy="236" r="34" fill="#3f8f5a"/>
+      <circle cx="128" cy="226" r="30" fill="#3f8f5a"/>
+      <circle cx="170" cy="290" r="40" fill="#3f8f5a"/>
+      <circle cx="112" cy="300" r="34" fill="#2f7048"/>
+      <circle cx="196" cy="276" r="26" fill="#57a86c"/>
+    </g>
+
+    <!-- Spire (leaded spike) -->
+    <polygon points="243,192 250,84 250,192" fill="#e6e1d6"/>
+    <polygon points="250,84 257,192 250,192" fill="#a9a397"/>
+
+    <!-- Tower -->
+    <rect x="205" y="190" width="100" height="160" fill="#e2b06f"/>
+    <rect x="287" y="190" width="18" height="160" fill="#c98d52"/>
+    <!-- Crenellations -->
+    <g fill="#e2b06f">
+      <rect x="203" y="178" width="13" height="14"/>
+      <rect x="224" y="178" width="13" height="14"/>
+      <rect x="245" y="178" width="13" height="14"/>
+      <rect x="266" y="178" width="13" height="14"/>
+    </g>
+    <rect x="287" y="178" width="13" height="14" fill="#c98d52"/>
+    <rect x="203" y="190" width="104" height="5" fill="#c98d52"/>
+    <!-- Corner buttress, catching the sun -->
+    <polygon points="195,350 195,262 205,250 205,214 219,206 219,350" fill="#f3cf94"/>
+    <polygon points="219,350 219,206 226,212 226,350" fill="#d79e60"/>
+    <!-- Clock -->
+    <circle cx="266" cy="214" r="11" fill="#fdf7ea" stroke="#2c5866" stroke-width="2.5"/>
+    <path d="M266 214 V206 M266 214 L272 217" stroke="#2c5866" stroke-width="2" stroke-linecap="round"/>
+    <!-- Belfry lancets -->
+    <g fill="#6b3a26">
+      <path d="M241 270 V243 a9 9 0 0 1 18 0 V270 z"/>
+      <path d="M264 270 V243 a9 9 0 0 1 18 0 V270 z"/>
+    </g>
+    <g stroke="#e2b06f" stroke-width="2">
+      <path d="M241 252 H259 M241 261 H259 M264 252 H282 M264 261 H282"/>
+    </g>
+    <!-- West window -->
+    <path d="M240 340 V305 a15 15 0 0 1 30 0 V340 z" fill="#6b3a26"/>
+    <path d="M255 290 V340 M240 318 H270" stroke="#e2b06f" stroke-width="2"/>
+
+    <!-- Stair turret with flag -->
+    <line x1="322" y1="156" x2="322" y2="126" stroke="#f7ecd2" stroke-width="2.5"/>
+    <path d="M322 127 L342 132 L322 138 z" fill="#e8833a"/>
+    <rect x="305" y="166" width="32" height="184" fill="#c0623e"/>
+    <rect x="325" y="166" width="12" height="184" fill="#a24f31"/>
+    <g fill="#c0623e">
+      <rect x="302" y="154" width="9" height="14"/>
+      <rect x="316" y="154" width="9" height="14"/>
+    </g>
+    <rect x="330" y="154" width="9" height="14" fill="#a24f31"/>
+    <rect x="302" y="166" width="38" height="5" fill="#a24f31"/>
+    <g fill="#5b2a1b">
+      <rect x="314" y="190" width="5" height="14" rx="2"/>
+      <rect x="314" y="232" width="5" height="14" rx="2"/>
+      <rect x="314" y="274" width="5" height="14" rx="2"/>
+    </g>
+
+    <!-- Low tiled shop between church and Tudor house -->
+    <polygon points="296,302 392,236 446,236 446,302" fill="#b5543a"/>
+    <g stroke="#9a4430" stroke-width="2">
+      <path d="M330 279 H446 M360 258 H446"/>
+    </g>
+    <rect x="300" y="302" width="146" height="48" fill="#f7efdf"/>
+    <rect x="300" y="302" width="146" height="5" fill="#2b2b2b"/>
+    <!-- Striped awning -->
+    <g>
+      <polygon points="330,310 420,310 428,328 322,328" fill="#fdfaf2"/>
+      <g fill="#2b2b2b">
+        <polygon points="330,310 340,310 334,328 322,328"/>
+        <polygon points="352,310 362,310 358,328 346,328"/>
+        <polygon points="374,310 384,310 382,328 370,328"/>
+        <polygon points="396,310 406,310 406,328 394,328"/>
+        <polygon points="416,310 420,310 428,328 418,328"/>
+      </g>
+    </g>
+    <rect x="334" y="330" width="34" height="20" fill="#2d4a52"/>
+    <rect x="384" y="330" width="34" height="20" fill="#2d4a52"/>
+
+    <!-- Tudor timber-framed house -->
+    <polygon points="434,224 507,150 580,224" fill="#fbf3e2"/>
+    <rect x="434" y="224" width="146" height="66" fill="#fbf3e2"/>
+    <rect x="444" y="290" width="126" height="60" fill="#fbf3e2"/>
+        <!-- Bargeboards and roof -->
+    <path d="M424 230 L507 144 L590 230" fill="none" stroke="#b5543a" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M430 230 L507 151 L584 230" fill="none" stroke="#2b2b2b" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Timbers -->
+    <g stroke="#2b2b2b" stroke-width="5" stroke-linecap="square" fill="none">
+      <path d="M434 224 H580 M434 290 H580 M444 350 H570"/>
+      <path d="M440 226 V288 M470 226 V288 M507 158 V288 M544 226 V288 M574 226 V288"/>
+      <path d="M450 292 V350 M507 292 V350 M564 292 V350"/>
+      <path d="M440 288 L470 226 M574 288 L544 226 M470 222 L507 184 M544 222 L507 184"/>
+      <path d="M450 350 L478 292 M564 350 L536 292"/>
+    </g>
+    <!-- Leaded windows -->
+    <g fill="#2d4a52">
+      <rect x="484" y="236" width="18" height="34"/>
+      <rect x="512" y="236" width="18" height="34"/>
+      <rect x="490" y="196" width="34" height="20"/>
+      <rect x="470" y="304" width="30" height="34"/>
+      <rect x="514" y="304" width="30" height="34"/>
+    </g>
+    <g stroke="#7aa0a8" stroke-width="1">
+      <path d="M484 247 H502 M484 258 H502 M512 247 H530 M512 258 H530 M507 196 V216"/>
+      <path d="M485 304 V338 M470 321 H500 M529 304 V338 M514 321 H544"/>
+    </g>
+
+    <!-- Lamppost -->
+    <rect x="162" y="268" width="5" height="82" fill="#1d3c58"/>
+    <rect x="158" y="344" width="13" height="6" fill="#1d3c58"/>
+    <path d="M156 268 h17 l-3 -18 h-11 z" fill="#1d3c58"/>
+    <rect x="160" y="253" width="9" height="12" fill="#ffe3a1"/>
+    <path d="M157 250 h15 l-7.5 -8 z" fill="#1d3c58"/>
+
+    <!-- Street -->
+    <rect x="0" y="348" width="600" height="72" fill="#edc48a"/>
+    <polygon points="210,348 330,348 470,420 90,420" fill="#e3b072"/>
+    <g stroke="#d49c5e" stroke-width="2" fill="none" stroke-linecap="round">
+      <path d="M232 360 q38 -5 76 0 M214 374 q56 -7 112 0 M190 390 q80 -9 160 0"/>
+    </g>
+    <g fill="#1d3c58">
+      <rect x="190" y="352" width="7" height="22" rx="3"/>
+      <rect x="360" y="352" width="7" height="22" rx="3"/>
+      <rect x="400" y="360" width="8" height="26" rx="3"/>
+    </g>
+
+    <!-- Foreground leaves, poster style -->
+    <g fill="#183a44">
+      <path d="M16 16 C70 30 110 60 128 104 C92 96 50 68 16 16 z"/>
+      <path d="M16 16 C40 70 44 120 30 166 C10 130 4 70 16 16 z"/>
+      <path d="M16 16 C80 20 132 8 180 30 C130 48 70 44 16 16 z"/>
+      <path d="M16 16 C60 60 72 112 70 150 C46 120 28 72 16 16 z"/>
+      <path d="M16 16 C90 50 120 54 160 76 C112 84 60 60 16 16 z"/>
+    </g>
+  </g>
+
+  <!-- Title -->
+  <g font-family="Georgia, 'Times New Roman', 'Noto Serif', 'DejaVu Serif', serif" text-anchor="middle">
+    <text x="300" y="46" font-size="22" font-style="italic" fill="#fffaf0" textLength="150" lengthAdjust="spacingAndGlyphs">Greetings from</text>
+    <text x="304" y="124" font-size="86" font-weight="700" fill="#e8833a" textLength="470" lengthAdjust="spacingAndGlyphs">HITCHIN</text>
+    <text x="300" y="120" font-size="86" font-weight="700" fill="#fffaf0" textLength="470" lengthAdjust="spacingAndGlyphs">HITCHIN</text>
+  </g>
+
+  <!-- Banner -->
+  <path d="M72 362 h26 v34 h-26 l10 -17 z" fill="#14343f"/>
+  <path d="M528 362 h-26 v34 h26 l-10 -17 z" fill="#14343f"/>
+  <rect x="92" y="354" width="416" height="36" rx="3" fill="#1f4e5f"/>
+  <text x="300" y="381" font-family="Georgia, 'Times New Roman', 'Noto Serif', 'DejaVu Serif', serif" font-size="25" font-weight="700" fill="#f7ecd2" text-anchor="middle" textLength="330" lengthAdjust="spacingAndGlyphs">TREASURE HUNT</text>
+
+  <!-- Card edge -->
+  <rect x="16" y="16" width="568" height="388" rx="12" fill="none" stroke="#14343f" stroke-opacity="0.25" stroke-width="2"/>
+</svg>

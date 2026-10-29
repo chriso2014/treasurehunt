@@ -30,7 +30,7 @@ export const SignIn = ({ onSignedIn, onShowRegister }: Props) => {
   };
 
   return (
-    <Screen title="Sign in">
+    <Screen title="Sign in" logo>
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
         <TextField
           label="Team name"

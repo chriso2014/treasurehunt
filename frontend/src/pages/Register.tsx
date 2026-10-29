@@ -46,7 +46,7 @@ export const Register = ({ onSignedIn, onShowSignIn }: Props) => {
   };
 
   return (
-    <Screen title="Hitchin Treasure Hunt">
+    <Screen logo>
       <p className="text-center text-lg text-slate-300">
         Register your team. One phone per team. Remember the password: you’ll need it to sign in on
         another phone.

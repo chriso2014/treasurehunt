@@ -4,6 +4,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from 'react';
+import postcardUrl from '../assets/hitchin-postcard.svg';
 
 // Big, high-contrast controls for one-handed use outdoors.
 
@@ -47,9 +48,35 @@ export const ErrorMessage = ({ children }: { children: ReactNode }) =>
     </p>
   ) : null;
 
-export const Screen = ({ title, children }: { title: string; children: ReactNode }) => (
+const APP_NAME = 'Hitchin Treasure Hunt';
+
+/** The "Greetings from Hitchin" postcard. Without a title it is the page heading itself. */
+const Postcard = ({ asHeading }: { asHeading: boolean }) => {
+  const img = (
+    <img
+      src={postcardUrl}
+      alt={asHeading ? APP_NAME : ''}
+      width={600}
+      height={420}
+      className="h-auto w-full drop-shadow-lg"
+    />
+  );
+  return asHeading ? <h1>{img}</h1> : img;
+};
+
+/** `logo` shows the postcard at the top; leave out `title` when the postcard is the heading. */
+export const Screen = ({
+  title,
+  logo,
+  children,
+}: {
+  title?: string;
+  logo?: boolean;
+  children: ReactNode;
+}) => (
   <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 bg-slate-900 px-5 py-8 text-white">
-    <h1 className="text-center text-3xl font-bold">{title}</h1>
+    {logo && <Postcard asHeading={!title} />}
+    {title && <h1 className="text-center text-3xl font-bold">{title}</h1>}
     {children}
   </main>
 );
