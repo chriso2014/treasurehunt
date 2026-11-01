@@ -70,5 +70,6 @@ npm run e2e:dev                  # full scripted game against dev (after a reset
 | `docs/09-coding-standards.md` | Layout and conventions |
 | `docs/10-testing.md` | Test layers, must-have cases |
 | `docs/11-observability-ops.md` | Logging, alarms, game-day runbook |
+| `docs/12-serverless-overview.md` | Learning guide: diagram, services, request flows, serverless patterns |
 | `docs/roadmap.md` | Phases and status |
 | `docs/decisions/` | ADRs 001–011 (010 = optional cartoon photo, proposed; 011 = pre-bundled Lambdas) |
