@@ -132,7 +132,9 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
         {current.clue.imageUrl && (
           <SafeImage src={current.clue.imageUrl} alt="Clue" className="w-full rounded-2xl" />
         )}
-        {current.clue.text && <p className="text-2xl leading-snug">{current.clue.text}</p>}
+        {current.clue.text && (
+          <p className="whitespace-pre-line text-2xl leading-snug">{current.clue.text}</p>
+        )}
       </section>
 
       {current.status === 'clue' && (
@@ -157,7 +159,7 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
               className="w-full rounded-xl"
             />
           )}
-          <p className="text-2xl leading-snug">{current.question.text}</p>
+          <p className="whitespace-pre-line text-2xl leading-snug">{current.question.text}</p>
         </section>
       )}
 
@@ -167,7 +169,9 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
           {current.hint.imageUrl && (
             <SafeImage src={current.hint.imageUrl} alt="Hint" className="w-full rounded-xl" />
           )}
-          {current.hint.text && <p className="text-xl leading-snug">{current.hint.text}</p>}
+          {current.hint.text && (
+            <p className="whitespace-pre-line text-xl leading-snug">{current.hint.text}</p>
+          )}
         </section>
       )}
 
