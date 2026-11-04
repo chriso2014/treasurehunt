@@ -99,7 +99,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
             text: question.question.text,
             imageUrl: await optionalUrl(signUrl, question.question.imageKey),
             options:
-              question.type === 'multiple_choice'
+              question.type === 'multiple_choice' || question.type === 'multi_select'
                 ? question.options.map((o) => ({ id: o.id, text: o.text }))
                 : null,
           }

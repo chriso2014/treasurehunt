@@ -67,7 +67,7 @@ Team-facing fields: **team name**, **password**, **team photo** (taken with the 
 - The client calls **action endpoints** (`reveal`, `answer`, `hint`, `skip`, `photo`, `video-call`) and `GET /teams/me/state`. See `docs/05-api-contract.md`.
 - Each action is a small Lambda (or one router Lambda per area) that loads state, checks the rule, and writes conditionally. Stage completion is a DynamoDB transaction.
 - Timer: `activeMs` + `runningSince` (ADR-006). Server time only; the client displays a ticking timer re-synced from each response.
-- Answer checking (`multiple_choice`, `free_text` matching rules in `docs/02-domain-and-glossary.md`) runs in a pure, unit-tested module.
+- Answer checking (`multiple_choice`, `multi_select`, `free_text` matching rules in `docs/02-domain-and-glossary.md`) runs in a pure, unit-tested module.
 
 ## GM review flow: photo and dance (agreed, ADR-009)
 Direct API + DynamoDB; no Step Functions.

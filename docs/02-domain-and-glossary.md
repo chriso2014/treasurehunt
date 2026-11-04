@@ -42,6 +42,12 @@
 - Wrong: wrong-answer penalty added; dropdown stays available; retry.
 - Correct: timer stops; next clue shown.
 
+### Type 1b: `multi_select` (tick boxes)
+- Team sees: question text (+ optional image) and a tick box for each option.
+- Answer: tick one or more options and submit.
+- Checking: automatic, on the server. Correct only if **exactly** the correct options are ticked (none missing, none extra; order doesn't matter). The correct options and how many there are are never sent to the client, so say "Which THREE…" in the question text.
+- Wrong / correct: same as type 1.
+
 ### Type 2: `free_text`
 - Team sees: question text (+ optional image) and a text field.
 - Answer: type text and submit.
@@ -111,7 +117,7 @@ locked → clue_shown → revealed (timer running)
     awaiting_review → revealed (declined; penalty; timer resumes)  [photo]
     awaiting_review → completed (approved or video_call declined)
            revealed → skipped (hint used + skip; penalty)  [not video_call]
-           revealed → completed (correct answer)       [multiple_choice / free_text]
+           revealed → completed (correct answer)       [multiple_choice / multi_select / free_text]
 ```
 The timer is recorded as a list of running intervals (start/stop timestamps), so pauses are exact and auditable.
 

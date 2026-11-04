@@ -24,6 +24,7 @@ import {
   profile,
   q1,
   q2,
+  q3,
   q4,
   record,
   routeA,
@@ -51,6 +52,7 @@ beforeEach(() => {
     'ROUTE#A|ROUTE': { questionIds: routeA },
     'QUESTION#q1|QUESTION': q1,
     'QUESTION#q2|QUESTION': q2,
+    'QUESTION#q3|QUESTION': q3,
     'QUESTION#q4|QUESTION': q4,
   };
   for (const [key, item] of Object.entries(content)) {
@@ -257,6 +259,45 @@ describe('POST /teams/me/current/answer', () => {
       await answer(teamEvent('team-1', { stage: 1, attemptId: ATTEMPT, text: 'Blue' })),
     );
     expect(res.status).toBe(400);
+  });
+
+  describe('tick-box question', () => {
+    const ticking = () =>
+      record({
+        profile: profile({ currentStage: 2 }),
+        stages: [
+          stage({ status: 'completed' }),
+          stage({ stage: 2, questionId: 'q3', status: 'revealed', runningSince: revealedAt }),
+        ],
+      });
+
+    it('is wrong unless exactly the right boxes are ticked, and logs the ticks', async () => {
+      given(ticking());
+      const res = parse(
+        await answer(
+          teamEvent('team-1', { stage: 2, attemptId: ATTEMPT, optionIds: ['c', 'a', 'b'] }),
+        ),
+      );
+      expect(res.body.correct).toBe(false);
+      expect(transactItems()[0]!.Put).toMatchObject({ Item: { result: 'wrong', value: 'a,b,c' } });
+    });
+
+    it('completes the stage when exactly the right boxes are ticked', async () => {
+      given(ticking());
+      const res = parse(
+        await answer(teamEvent('team-1', { stage: 2, attemptId: ATTEMPT, optionIds: ['c', 'b'] })),
+      );
+      expect(res.body.correct).toBe(true);
+      expect(transactItems()[0]!.Put).toMatchObject({ Item: { result: 'correct', value: 'b,c' } });
+    });
+
+    it('refuses a single option for a tick-box question', async () => {
+      given(ticking());
+      const res = parse(
+        await answer(teamEvent('team-1', { stage: 2, attemptId: ATTEMPT, optionId: 'b' })),
+      );
+      expect(res.status).toBe(400);
+    });
   });
 
   it('requires an attempt id', async () => {

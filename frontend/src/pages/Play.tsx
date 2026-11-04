@@ -197,7 +197,7 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
               Call the game master
             </Button>
           ) : (
-            <AnswerForm current={current} busy={busy} onSubmit={submit} />
+            <AnswerForm key={current.stage} current={current} busy={busy} onSubmit={submit} />
           )}
           {!current.hintUsed && (
             <Button variant="secondary" onClick={doHint} busy={busy}>
@@ -242,13 +242,19 @@ const AnswerForm = ({
   onSubmit: (value: Answer, attemptId: string) => Promise<void>;
 }) => {
   const [optionId, setOptionId] = useState('');
+  const [ticked, setTicked] = useState<string[]>([]);
   const [text, setText] = useState('');
   // One id per distinct submission: a retry of the same answer reuses it.
   const [attempt, setAttempt] = useState({ key: '', id: newAttemptId() });
 
   const send = (e: FormEvent) => {
     e.preventDefault();
-    const value: Answer = current.type === 'multiple_choice' ? { optionId } : { text: text.trim() };
+    const value: Answer =
+      current.type === 'multiple_choice'
+        ? { optionId }
+        : current.type === 'multi_select'
+          ? { optionIds: [...ticked].sort() }
+          : { text: text.trim() };
     const key = JSON.stringify(value);
     const id = key === attempt.key ? attempt.id : newAttemptId();
     setAttempt({ key, id });
@@ -274,6 +280,35 @@ const AnswerForm = ({
           </select>
         </label>
         <Button type="submit" busy={busy} disabled={!optionId}>
+          Submit answer
+        </Button>
+      </form>
+    );
+  }
+
+  if (current.type === 'multi_select') {
+    const toggle = (id: string) =>
+      setTicked((t) => (t.includes(id) ? t.filter((x) => x !== id) : [...t, id]));
+    return (
+      <form onSubmit={send} className="flex flex-col gap-4">
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 text-lg">Tick your answers</legend>
+          {current.question?.options?.map((o) => (
+            <label
+              key={o.id}
+              className="flex items-center gap-4 rounded-xl border-2 border-slate-500 bg-slate-800 px-4 py-3 text-xl"
+            >
+              <input
+                type="checkbox"
+                checked={ticked.includes(o.id)}
+                onChange={() => toggle(o.id)}
+                className="h-7 w-7 shrink-0 accent-amber-400"
+              />
+              {o.text}
+            </label>
+          ))}
+        </fieldset>
+        <Button type="submit" busy={busy} disabled={ticked.length === 0}>
           Submit answer
         </Button>
       </form>

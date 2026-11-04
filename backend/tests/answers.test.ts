@@ -3,6 +3,7 @@ import type { Question } from '@treasurehunt/shared';
 import {
   checkFreeText,
   checkMultipleChoice,
+  checkMultiSelect,
   defaultMaxTypos,
   levenshtein,
   normalise,
@@ -40,6 +41,27 @@ describe('checkMultipleChoice', () => {
     expect(checkMultipleChoice(q, 'b')).toBe(true);
     expect(checkMultipleChoice(q, 'a')).toBe(false);
     expect(checkMultipleChoice(q, 'Blue')).toBe(false);
+  });
+});
+
+describe('checkMultiSelect', () => {
+  const q = {
+    ...base,
+    type: 'multi_select' as const,
+    options: ['a', 'b', 'c', 'd', 'e'].map((id) => ({ id, text: id.toUpperCase() })),
+    correctOptionIds: ['b', 'd', 'e'],
+  };
+  it('accepts exactly the correct options, in any order', () => {
+    expect(checkMultiSelect(q, ['b', 'd', 'e'])).toBe(true);
+    expect(checkMultiSelect(q, ['e', 'b', 'd'])).toBe(true);
+  });
+  it('rejects a missing, extra or swapped tick', () => {
+    expect(checkMultiSelect(q, ['b', 'd'])).toBe(false);
+    expect(checkMultiSelect(q, ['a', 'b', 'd', 'e'])).toBe(false);
+    expect(checkMultiSelect(q, ['a', 'd', 'e'])).toBe(false);
+  });
+  it('does not count a repeated tick twice', () => {
+    expect(checkMultiSelect(q, ['b', 'b', 'd'])).toBe(false);
   });
 });
 

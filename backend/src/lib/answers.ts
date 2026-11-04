@@ -4,9 +4,19 @@ import type { Question } from '@treasurehunt/shared';
 
 type FreeText = Extract<Question, { type: 'free_text' }>;
 type MultipleChoice = Extract<Question, { type: 'multiple_choice' }>;
+type MultiSelect = Extract<Question, { type: 'multi_select' }>;
 
 export const checkMultipleChoice = (question: MultipleChoice, optionId: string): boolean =>
   optionId === question.correctOptionId;
+
+/** Right only if exactly the correct options are ticked: none missing, none extra. */
+export const checkMultiSelect = (question: MultiSelect, optionIds: string[]): boolean => {
+  const ticked = new Set(optionIds);
+  return (
+    ticked.size === question.correctOptionIds.length &&
+    question.correctOptionIds.every((id) => ticked.has(id))
+  );
+};
 
 const ARTICLES = /^(the|a|an) /;
 

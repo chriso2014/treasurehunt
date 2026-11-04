@@ -19,7 +19,13 @@ export const stageStatusSchema = z.enum([
 ]);
 export type StageStatus = z.infer<typeof stageStatusSchema>;
 
-export const questionTypeSchema = z.enum(['multiple_choice', 'free_text', 'photo', 'video_call']);
+export const questionTypeSchema = z.enum([
+  'multiple_choice',
+  'multi_select',
+  'free_text',
+  'photo',
+  'video_call',
+]);
 export type QuestionType = z.infer<typeof questionTypeSchema>;
 
 export const attemptResultSchema = z.enum([

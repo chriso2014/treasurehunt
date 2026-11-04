@@ -1,7 +1,7 @@
 import { TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { answerRequestSchema, type AnswerResponse } from '@treasurehunt/shared';
 import { isLostRace, loadForAction } from '../../lib/actions.js';
-import { checkFreeText, checkMultipleChoice } from '../../lib/answers.js';
+import { checkFreeText, checkMultipleChoice, checkMultiSelect } from '../../lib/answers.js';
 import { teamIdFrom, type AuthedEvent } from '../../lib/auth.js';
 import { db } from '../../lib/aws.js';
 import { clock } from '../../lib/clock.js';
@@ -13,7 +13,7 @@ import { logger } from '../../lib/logger.js';
 import { completeStageItems } from '../../lib/progress.js';
 import { loadState } from '../../lib/state.js';
 
-// POST /teams/me/current/answer { stage, attemptId, optionId | text }.
+// POST /teams/me/current/answer { stage, attemptId, optionId | optionIds | text }.
 // Wrong: +penalty, try again. Correct: the stage completes and the next clue opens.
 // The attempt is written with the stage change in one transaction keyed by attemptId, so a
 // retried submission is applied once and then answered from the stored attempt.
@@ -40,6 +40,9 @@ export const handler = route(async (event: AuthedEvent) => {
   if (question.type === 'multiple_choice' && 'optionId' in body) {
     correct = checkMultipleChoice(question, body.optionId);
     value = body.optionId;
+  } else if (question.type === 'multi_select' && 'optionIds' in body) {
+    correct = checkMultiSelect(question, body.optionIds);
+    value = [...new Set(body.optionIds)].sort().join(',');
   } else if (question.type === 'free_text' && 'text' in body) {
     correct = checkFreeText(question, body.text);
     value = body.text;

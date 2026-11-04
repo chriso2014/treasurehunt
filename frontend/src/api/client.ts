@@ -106,7 +106,7 @@ export const getState = (): Promise<TeamState> =>
 export const reveal = (stage: number): Promise<TeamState> =>
   request('POST', '/teams/me/current/reveal', teamStateSchema, { body: { stage } });
 
-export type Answer = { optionId: string } | { text: string };
+export type Answer = { optionId: string } | { optionIds: string[] } | { text: string };
 
 /** attemptId is made once per submission and reused on retries, so it counts once. */
 export const hint = (stage: number): Promise<TeamState> =>

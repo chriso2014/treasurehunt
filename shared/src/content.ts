@@ -70,6 +70,27 @@ const multipleChoice = z
     path: ['options'],
   });
 
+const multiSelect = z
+  .strictObject({
+    ...base,
+    type: z.literal('multi_select'),
+    options: z.array(z.strictObject({ id: z.string().min(1), text: z.string().min(1) })).min(2),
+    /** Every option that must be ticked; the answer is right only if exactly these are ticked. */
+    correctOptionIds: z.array(z.string().min(1)).min(1),
+  })
+  .refine((q) => q.correctOptionIds.every((id) => q.options.some((o) => o.id === id)), {
+    message: 'correctOptionIds must all be options',
+    path: ['correctOptionIds'],
+  })
+  .refine((q) => new Set(q.correctOptionIds).size === q.correctOptionIds.length, {
+    message: 'correctOptionIds must be unique',
+    path: ['correctOptionIds'],
+  })
+  .refine((q) => new Set(q.options.map((o) => o.id)).size === q.options.length, {
+    message: 'option ids must be unique',
+    path: ['options'],
+  });
+
 const freeText = z.strictObject({
   ...base,
   type: z.literal('free_text'),
@@ -92,6 +113,7 @@ const videoCall = z.strictObject({ ...base, type: z.literal('video_call') });
 
 export const questionSchema = z.discriminatedUnion('type', [
   multipleChoice,
+  multiSelect,
   freeText,
   photo,
   videoCall,
