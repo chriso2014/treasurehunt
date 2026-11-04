@@ -77,6 +77,8 @@ const multiSelect = z
     options: z.array(z.strictObject({ id: z.string().min(1), text: z.string().min(1) })).min(2),
     /** Every option that must be ticked; the answer is right only if exactly these are ticked. */
     correctOptionIds: z.array(z.string().min(1)).min(1),
+    /** If set, a wrong answer costs this much per wrong option instead of the wrong penalty. */
+    wrongOptionPenaltyMs: durationMs.optional(),
   })
   .refine((q) => q.correctOptionIds.every((id) => q.options.some((o) => o.id === id)), {
     message: 'correctOptionIds must all be options',

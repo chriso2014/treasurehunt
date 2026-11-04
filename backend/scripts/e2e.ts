@@ -298,7 +298,7 @@ const playStage = async (
           ),
         });
         check(wrong.correct === false, 'wrong ticks are wrong');
-        expected += p('wrong');
+        expected += question.wrongOptionPenaltyMs ?? p('wrong');
       }
       const right = await answer({ attemptId: randomUUID(), optionIds: question.correctOptionIds });
       check(right.correct === true, 'ticking exactly the right options completes the stage');

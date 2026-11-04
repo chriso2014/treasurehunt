@@ -4,6 +4,7 @@ import {
   checkFreeText,
   checkMultipleChoice,
   checkMultiSelect,
+  countWrongOptions,
   defaultMaxTypos,
   levenshtein,
   normalise,
@@ -62,6 +63,15 @@ describe('checkMultiSelect', () => {
   });
   it('does not count a repeated tick twice', () => {
     expect(checkMultiSelect(q, ['b', 'b', 'd'])).toBe(false);
+  });
+  it.each([
+    [['b', 'd', 'e'], 0],
+    [['a', 'd', 'e'], 1], // one swapped
+    [['b', 'd'], 1], // one missing
+    [['a', 'b', 'd', 'e'], 1], // one extra
+    [['a', 'c'], 3], // all three missed
+  ])('counts %j as %i wrong', (ticks, wrong) => {
+    expect(countWrongOptions(q, ticks)).toBe(wrong);
   });
 });
 

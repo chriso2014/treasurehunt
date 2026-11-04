@@ -48,6 +48,7 @@ export const q3: Question = {
     { id: 'c', text: 'Blue' },
   ],
   correctOptionIds: ['b', 'c'],
+  wrongOptionPenaltyMs: 120_000,
 };
 
 export const q4: Question = {

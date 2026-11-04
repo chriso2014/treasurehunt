@@ -280,6 +280,19 @@ describe('POST /teams/me/current/answer', () => {
       );
       expect(res.body.correct).toBe(false);
       expect(transactItems()[0]!.Put).toMatchObject({ Item: { result: 'wrong', value: 'a,b,c' } });
+      // One wrong option (a ticked): 1 x 2 minutes.
+      expect(transactItems()[1]!.Update!.ExpressionAttributeValues).toMatchObject({
+        ':p': 120_000,
+      });
+    });
+
+    it('charges the per-option penalty for each wrong option', async () => {
+      given(ticking());
+      await answer(teamEvent('team-1', { stage: 2, attemptId: ATTEMPT, optionIds: ['a'] }));
+      // a is wrong and b, c are missed: 2 x 2 minutes.
+      expect(transactItems()[1]!.Update!.ExpressionAttributeValues).toMatchObject({
+        ':p': 240_000,
+      });
     });
 
     it('completes the stage when exactly the right boxes are ticked', async () => {

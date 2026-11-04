@@ -46,7 +46,7 @@
 - Team sees: question text (+ optional image) and a tick box for each option.
 - Answer: tick one or more options and submit.
 - Checking: automatic, on the server. Correct only if **exactly** the correct options are ticked (none missing, none extra; order doesn't matter). The correct options and how many there are are never sent to the client, so say "Which THREE…" in the question text.
-- Wrong / correct: same as type 1.
+- Wrong / correct: same as type 1. Optionally `wrongOptionPenaltyMs` charges that much **per wrong option** instead of the usual wrong-answer penalty. Wrong options = the larger of wrong ticks and missed correct options, so swapping one right answer for a wrong one counts as one.
 
 ### Type 2: `free_text`
 - Team sees: question text (+ optional image) and a text field.

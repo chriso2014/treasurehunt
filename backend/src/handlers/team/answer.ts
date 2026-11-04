@@ -1,7 +1,12 @@
 import { TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { answerRequestSchema, type AnswerResponse } from '@treasurehunt/shared';
 import { isLostRace, loadForAction } from '../../lib/actions.js';
-import { checkFreeText, checkMultipleChoice, checkMultiSelect } from '../../lib/answers.js';
+import {
+  checkFreeText,
+  checkMultipleChoice,
+  checkMultiSelect,
+  countWrongOptions,
+} from '../../lib/answers.js';
 import { teamIdFrom, type AuthedEvent } from '../../lib/auth.js';
 import { db } from '../../lib/aws.js';
 import { clock } from '../../lib/clock.js';
@@ -82,7 +87,12 @@ export const handler = route(async (event: AuthedEvent) => {
       }),
     ];
   } else {
-    const penalty = penaltyFor('wrong', question, await getContentConfig());
+    const penalty =
+      question.type === 'multi_select' &&
+      'optionIds' in body &&
+      question.wrongOptionPenaltyMs !== undefined
+        ? question.wrongOptionPenaltyMs * countWrongOptions(question, body.optionIds)
+        : penaltyFor('wrong', question, await getContentConfig());
     items = [
       putAttempt,
       {

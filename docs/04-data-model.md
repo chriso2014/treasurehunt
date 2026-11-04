@@ -26,6 +26,7 @@ question:  { text, imageKey? }           // shown on Reveal
 options?:  [{ id, text }]                // multiple_choice, multi_select
 correctOptionId?                          // multiple_choice (never sent to client)
 correctOptionIds?: [string]               // multi_select: exactly these must be ticked (never sent)
+wrongOptionPenaltyMs?                     // multi_select: penalty per wrong option instead of `wrong`
 acceptedAnswers?: [string]                // free_text (never sent to client)
 matching?: { maxTypos?, ignoreArticles?, contains?: [string], numeric?: { value, tolerance } }
 hint:      { text?, imageKey? }          // never sent until requested

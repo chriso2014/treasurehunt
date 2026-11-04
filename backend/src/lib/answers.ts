@@ -9,6 +9,18 @@ type MultiSelect = Extract<Question, { type: 'multi_select' }>;
 export const checkMultipleChoice = (question: MultipleChoice, optionId: string): boolean =>
   optionId === question.correctOptionId;
 
+/**
+ * How many options a tick-box answer got wrong: the larger of wrong ticks and missed correct
+ * options, so swapping one right option for a wrong one counts as one.
+ */
+export const countWrongOptions = (question: MultiSelect, optionIds: string[]): number => {
+  const ticked = new Set(optionIds);
+  const correct = new Set(question.correctOptionIds);
+  const extra = [...ticked].filter((id) => !correct.has(id)).length;
+  const missed = [...correct].filter((id) => !ticked.has(id)).length;
+  return Math.max(extra, missed);
+};
+
 /** Right only if exactly the correct options are ticked: none missing, none extra. */
 export const checkMultiSelect = (question: MultiSelect, optionIds: string[]): boolean => {
   const ticked = new Set(optionIds);
