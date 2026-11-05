@@ -279,7 +279,9 @@ describe('POST /teams/me/current/answer', () => {
         ),
       );
       expect(res.body.correct).toBe(false);
-      expect(transactItems()[0]!.Put).toMatchObject({ Item: { result: 'wrong', value: 'a,b,c' } });
+      expect(transactItems()[0]!.Put).toMatchObject({
+        Item: { result: 'wrong', value: 'a,b,c', penaltyMs: 120_000 },
+      });
       // One wrong option (a ticked): 1 x 2 minutes.
       expect(transactItems()[1]!.Update!.ExpressionAttributeValues).toMatchObject({
         ':p': 120_000,

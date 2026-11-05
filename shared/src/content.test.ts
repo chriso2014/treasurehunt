@@ -49,6 +49,12 @@ describe('gameContentSchema', () => {
     expect(issues(content)).toEqual([
       'questions.0.correctOptionIds: correctOptionIds must all be options',
     ]);
+    const q0 = content.questions[0] as { options: { id: string; text: string }[] };
+    q0.options = Array.from({ length: 31 }, (_, i) => ({ id: `o${i}`, text: `Option ${i}` }));
+    (content.questions[0] as { correctOptionIds: string[] }).correctOptionIds = ['o1'];
+    expect(issues(content)).toEqual([
+      'questions.0.options: Too big: expected array to have <=30 items',
+    ]);
   });
 
   it('rejects a location outside Hitchin, e.g. a missing minus sign', () => {

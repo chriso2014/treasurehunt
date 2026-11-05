@@ -5,7 +5,13 @@ import type {
   StageResult,
   TeamState,
 } from '@treasurehunt/shared';
-import { getGameStatus, loadTeam, type StageItem, type TeamRecord } from './game.js';
+import {
+  getGameStatus,
+  loadTeam,
+  type AttemptItem,
+  type StageItem,
+  type TeamRecord,
+} from './game.js';
 import { getContentConfig, getQuestion, getRoute, penaltyFor } from './content.js';
 import { clock } from './clock.js';
 import { viewUrl } from './s3.js';
@@ -37,12 +43,17 @@ const stageResult = (
   s: StageItem,
   question: Question | undefined,
   contentConfig: GameContent['config'],
+  attempts: AttemptItem[],
 ): StageResult => {
   const each = (kind: 'wrong' | 'declined' | 'hint' | 'skip') =>
     question ? penaltyFor(kind, question, contentConfig) : contentConfig.defaultPenaltyMs;
   const declines = s.declines + (s.outcome === 'declined' ? 1 : 0);
+  // Wrong answers cost the flat penalty unless the attempt recorded its own (per wrong option).
+  const wrongMs = attempts
+    .filter((a) => a.stage === s.stage && a.result === 'wrong' && a.penaltyMs !== undefined)
+    .reduce((sum, a) => sum + a.penaltyMs! - each('wrong'), s.wrongAttempts * each('wrong'));
   const penalties: StageResult['penalties'] = [
-    { kind: 'wrong' as const, count: s.wrongAttempts, ms: s.wrongAttempts * each('wrong') },
+    { kind: 'wrong' as const, count: s.wrongAttempts, ms: wrongMs },
     { kind: 'declined' as const, count: declines, ms: declines * each('declined') },
     { kind: 'hint' as const, count: s.hintUsed ? 1 : 0, ms: s.hintUsed ? each('hint') : 0 },
     { kind: 'skip' as const, count: s.skipped ? 1 : 0, ms: s.skipped ? each('skip') : 0 },
@@ -139,7 +150,9 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
     current,
     completedLocations,
     map: contentConfig.map,
-    results: done.map((s) => stageResult(s, questions.get(s.questionId), contentConfig)),
+    results: done.map((s) =>
+      stageResult(s, questions.get(s.questionId), contentConfig, record.attempts),
+    ),
     serverTime: now.toISOString(),
   };
 };

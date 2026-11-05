@@ -65,6 +65,14 @@ export const handler = route(async (event: AuthedEvent) => {
     value,
     result: correct ? 'correct' : 'wrong',
   };
+  const penalty = correct
+    ? 0
+    : question.type === 'multi_select' &&
+        'optionIds' in body &&
+        question.wrongOptionPenaltyMs !== undefined
+      ? question.wrongOptionPenaltyMs * countWrongOptions(question, body.optionIds)
+      : penaltyFor('wrong', question, await getContentConfig());
+  if (!correct) attempt.penaltyMs = penalty;
   const putAttempt = {
     Put: {
       TableName: config.gameTable,
@@ -87,12 +95,6 @@ export const handler = route(async (event: AuthedEvent) => {
       }),
     ];
   } else {
-    const penalty =
-      question.type === 'multi_select' &&
-      'optionIds' in body &&
-      question.wrongOptionPenaltyMs !== undefined
-        ? question.wrongOptionPenaltyMs * countWrongOptions(question, body.optionIds)
-        : penaltyFor('wrong', question, await getContentConfig());
     items = [
       putAttempt,
       {

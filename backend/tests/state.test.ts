@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { teamStateSchema, type Question } from '@treasurehunt/shared';
 import { buildState, type StateInput } from '../src/lib/state.js';
-import { attempt, contentConfig, profile, q1, q2, q4, record, stage } from './fixtures.js';
+import { attempt, contentConfig, profile, q1, q2, q3, q4, record, stage } from './fixtures.js';
 
 const now = new Date('2026-10-28T10:10:00.000Z');
 const questions = new Map<string, Question>([
   ['q1', q1],
   ['q2', q2],
+  ['q3', q3],
   ['q4', q4],
 ]);
 const build = (overrides: Partial<StateInput>) =>
@@ -174,6 +175,30 @@ describe('buildState results', () => {
         ],
       },
     ]);
+  });
+
+  it('uses what each wrong answer was actually charged, e.g. per wrong option', async () => {
+    const wrong = (attemptId: string, penaltyMs: number) =>
+      attempt({ attemptId, questionId: 'q3', type: 'multi_select', penaltyMs });
+    const state = await build({
+      record: record({
+        profile: profile({ status: 'finished' }),
+        stages: [
+          stage({
+            questionId: 'q3',
+            status: 'completed',
+            outcome: 'correct',
+            wrongAttempts: 2,
+            penaltyMs: 360_000,
+          }),
+        ],
+        attempts: [
+          wrong('00000000-0000-4000-8000-000000000001', 120_000),
+          wrong('00000000-0000-4000-8000-000000000002', 240_000),
+        ],
+      }),
+    });
+    expect(state.results[0]!.penalties).toEqual([{ kind: 'wrong', count: 2, ms: 360_000 }]);
   });
 
   it('counts a declined dance as one decline', async () => {
