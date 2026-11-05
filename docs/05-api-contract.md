@@ -24,7 +24,7 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
 |---------------|------|--------|
 | `GET /teams/me/state` | none | Current screen data (polled while waiting for start or review) |
 | `POST /teams/me/current/reveal` | `{ stage }` | `clue` → `revealed`, start timer. Returns `state`. Repeating it is harmless |
-| `POST /teams/me/current/answer` | `{ stage, attemptId, optionId }` or `{ stage, attemptId, text }` | Check; wrong: +penalty; correct: complete stage. Returns `{ correct, state }`; `correct` is null if the request was a late retry for a stage already finished |
+| `POST /teams/me/current/answer` | `{ stage, attemptId, optionId }`, `{ stage, attemptId, optionIds }` (tick boxes) or `{ stage, attemptId, text }` | Check; wrong: +penalty; correct: complete stage. Returns `{ correct, state }`; `correct` is null if the request was a late retry for a stage already finished |
 | `POST /teams/me/current/hint` | `{ stage }` | Only while `revealed`: `hintUsed`, +hint penalty (once). Returns `state` with `hint` filled in. Repeating it is harmless |
 | `POST /teams/me/current/skip` | `{ stage }` | Requires hint used, status `revealed`, not `video_call` (else 409); +skip penalty, stage `skipped`, next clue. Returns `state`. A late retry returns the current state |
 | `POST /teams/me/current/photo-upload` | `{ stage, attemptId }` | Photo question, `revealed` only. `{ url, fields, key }` pre-signed POST (5 min, `image/jpeg`, ≤5 MB) for `teams/{teamId}/submissions/{nn}-{attemptId}.jpg` |

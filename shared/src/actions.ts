@@ -31,6 +31,7 @@ export type ReviewDecision = z.infer<typeof reviewDecisionSchema>;
 export const answerRequestSchema = z.union([
   z.object({ stage, attemptId: z.uuid(), optionId: z.string().min(1) }),
   z.object({ stage, attemptId: z.uuid(), text: z.string().trim().min(1).max(200) }),
+  z.object({ stage, attemptId: z.uuid(), optionIds: z.array(z.string().min(1)).min(1).max(30) }),
 ]);
 export type AnswerRequest = z.infer<typeof answerRequestSchema>;
 

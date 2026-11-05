@@ -27,6 +27,36 @@ describe('gameContentSchema', () => {
     ]);
   });
 
+  it('accepts a tick-box question and rejects one whose answers are not options', () => {
+    const content = example();
+    const q = content.questions[0]!;
+    content.questions[0] = {
+      id: q.id,
+      location: q.location,
+      clue: q.clue,
+      question: q.question,
+      hint: q.hint,
+      type: 'multi_select',
+      options: [
+        { id: 'a', text: 'One' },
+        { id: 'b', text: 'Two' },
+        { id: 'c', text: 'Three' },
+      ],
+      correctOptionIds: ['a', 'c'],
+    };
+    expect(issues(content)).toEqual([]);
+    (content.questions[0] as { correctOptionIds: string[] }).correctOptionIds = ['a', 'z'];
+    expect(issues(content)).toEqual([
+      'questions.0.correctOptionIds: correctOptionIds must all be options',
+    ]);
+    const q0 = content.questions[0] as { options: { id: string; text: string }[] };
+    q0.options = Array.from({ length: 31 }, (_, i) => ({ id: `o${i}`, text: `Option ${i}` }));
+    (content.questions[0] as { correctOptionIds: string[] }).correctOptionIds = ['o1'];
+    expect(issues(content)).toEqual([
+      'questions.0.options: Too big: expected array to have <=30 items',
+    ]);
+  });
+
   it('rejects a location outside Hitchin, e.g. a missing minus sign', () => {
     const content = example();
     content.questions[0]!.location.lng = 0.28;

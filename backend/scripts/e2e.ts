@@ -286,6 +286,24 @@ const playStage = async (
       check(right.correct === true, 'correct option completes the stage');
       return { ms: expected, outcome: 'correct' };
     }
+    case 'multi_select': {
+      if (plan === 'careful') {
+        const wrong = await answer({
+          attemptId: randomUUID(),
+          optionIds: question.correctOptionIds.slice(0, -1).concat(
+            question.options
+              .filter((o) => !question.correctOptionIds.includes(o.id))
+              .map((o) => o.id)
+              .slice(0, 1),
+          ),
+        });
+        check(wrong.correct === false, 'wrong ticks are wrong');
+        expected += question.wrongOptionPenaltyMs ?? p('wrong');
+      }
+      const right = await answer({ attemptId: randomUUID(), optionIds: question.correctOptionIds });
+      check(right.correct === true, 'ticking exactly the right options completes the stage');
+      return { ms: expected, outcome: 'correct' };
+    }
     case 'free_text': {
       const correctText =
         question.acceptedAnswers[0] ?? String(question.matching?.numeric?.value ?? '');

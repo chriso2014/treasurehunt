@@ -35,6 +35,22 @@ export const q2: Question = {
   penaltyMs: { wrong: 60_000 },
 };
 
+/** Tick boxes; not on a route, used by answer tests as stage 2's question. */
+export const q3: Question = {
+  ...base,
+  id: 'q3',
+  type: 'multi_select',
+  clue: { text: 'Paint shop' },
+  question: { text: 'Which TWO are cool colours?' },
+  options: [
+    { id: 'a', text: 'Red' },
+    { id: 'b', text: 'Green' },
+    { id: 'c', text: 'Blue' },
+  ],
+  correctOptionIds: ['b', 'c'],
+  wrongOptionPenaltyMs: 120_000,
+};
+
 export const q4: Question = {
   ...base,
   id: 'q4',

@@ -75,6 +75,8 @@ export type AttemptItem = {
   result: AttemptResult;
   reviewedAt?: string;
   reason?: string;
+  /** What a wrong answer was charged, when it differs from the flat wrong penalty. */
+  penaltyMs?: number;
 };
 
 export type GameItem = {

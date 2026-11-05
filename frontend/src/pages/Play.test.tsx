@@ -126,6 +126,33 @@ describe('Play', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Correct!');
   });
 
+  it('submits every ticked box for a tick-box question', async () => {
+    vi.mocked(client.answer).mockResolvedValue({ correct: true, state: state(current()) });
+    const ticks = revealedMc({
+      type: 'multi_select',
+      question: {
+        text: 'Which TWO are cool colours?',
+        imageUrl: null,
+        options: [
+          { id: 'a', text: 'Red' },
+          { id: 'b', text: 'Green' },
+          { id: 'c', text: 'Blue' },
+        ],
+      },
+    });
+    render(
+      <Play state={state(ticks)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />,
+    );
+    const submit = screen.getByRole('button', { name: 'Submit answer' });
+    expect(submit).toBeDisabled();
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Blue' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Red' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Green' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Red' }));
+    await userEvent.click(submit);
+    expect(client.answer).toHaveBeenCalledWith(1, expect.any(String), { optionIds: ['b', 'c'] });
+  });
+
   it('reuses the attempt id when the same answer is sent again', async () => {
     vi.mocked(client.answer).mockRejectedValueOnce(new client.ApiError('NETWORK', 'No connection'));
     vi.mocked(client.answer).mockResolvedValue({ correct: false, state: state(revealedMc()) });

@@ -19,12 +19,14 @@ Loaded by `npm run seed` from `content/game.private.json` (gitignored). Read-onl
 
 Question item:
 ```
-id, type: multiple_choice | free_text | photo | video_call
+id, type: multiple_choice | multi_select | free_text | photo | video_call
 location:  { name, lat, lng }          // WGS84 decimal degrees, 5 dp (~1 m); e.g. 51.94912, -0.28013
 clue:      { text?, imageKey? }          // leads team to the location
 question:  { text, imageKey? }           // shown on Reveal
-options?:  [{ id, text }]                // multiple_choice
+options?:  [{ id, text }]                // multiple_choice, multi_select
 correctOptionId?                          // multiple_choice (never sent to client)
+correctOptionIds?: [string]               // multi_select: exactly these must be ticked (never sent)
+wrongOptionPenaltyMs?                     // multi_select: penalty per wrong option instead of `wrong`
 acceptedAnswers?: [string]                // free_text (never sent to client)
 matching?: { maxTypos?, ignoreArticles?, contains?: [string], numeric?: { value, tolerance } }
 hint:      { text?, imageKey? }          // never sent until requested
