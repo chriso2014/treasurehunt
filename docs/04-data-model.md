@@ -22,7 +22,7 @@ Question item:
 id, type: multiple_choice | multi_select | free_text | photo | video_call
 location:  { name, lat, lng }          // WGS84 decimal degrees, 5 dp (~1 m); e.g. 51.94912, -0.28013
 clue:      { text?, imageKey? }          // leads team to the location
-question:  { text, imageKey? }           // shown on Reveal
+question:  { text, imageKey?, randomImageKeys?, randomImageSlot? }  // shown on Reveal; a pool shows each team one picture (ADR-012)
 options?:  [{ id, text }]                // multiple_choice, multi_select
 correctOptionId?                          // multiple_choice (never sent to client)
 correctOptionIds?: [string]               // multi_select: exactly these must be ticked (never sent)

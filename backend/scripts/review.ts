@@ -21,7 +21,7 @@ const pending = await listPendingReviews();
 if (!action) {
   if (pending.length === 0) console.log('Nothing waiting for review.');
   for (const [i, p] of pending.entries()) {
-    const what = p.type === 'photo' ? 'photo' : 'dance call';
+    const what = p.type === 'photo' ? 'photo' : 'video call';
     console.log(
       `${i + 1}. ${p.teamName}: stage ${p.stage} ${what} (${p.questionId}), ${p.submittedAt}`,
     );

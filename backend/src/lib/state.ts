@@ -13,6 +13,7 @@ import {
   type TeamRecord,
 } from './game.js';
 import { getContentConfig, getQuestion, getRoute, penaltyFor } from './content.js';
+import { questionImageKey } from '@treasurehunt/shared';
 import { clock } from './clock.js';
 import { viewUrl } from './s3.js';
 import { gmWhatsappUrl } from './whatsapp.js';
@@ -108,7 +109,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
       question: revealed
         ? {
             text: question.question.text,
-            imageUrl: await optionalUrl(signUrl, question.question.imageKey),
+            imageUrl: await optionalUrl(signUrl, questionImageKey(question, profile.teamId)),
             options:
               question.type === 'multiple_choice' || question.type === 'multi_select'
                 ? question.options.map((o) => ({ id: o.id, text: o.text }))
@@ -130,7 +131,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
       hintPenaltyMs: penaltyFor('hint', question, contentConfig),
       skipPenaltyMs: penaltyFor('skip', question, contentConfig),
       hintUsed: stage.hintUsed,
-      canSkip: stage.hintUsed && stage.status === 'revealed' && question.type !== 'video_call',
+      canSkip: stage.hintUsed && stage.status === 'revealed',
       lastResult: latest ? { result: latest.result, reason: latest.reason ?? null } : null,
       whatsappUrl: question.type === 'video_call' && revealed ? (input.whatsappUrl ?? null) : null,
     };

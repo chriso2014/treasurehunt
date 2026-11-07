@@ -353,7 +353,7 @@ const playStage = async (
         token: team.token,
         body: { stage },
       });
-      check(skip.status === 409, 'the dance cannot be skipped');
+      check(skip.status === 409, 'the final call cannot be skipped before the hint');
       const attemptId = randomUUID();
       const [waiting] = await both(
         act(team, 'video-call', { stage, attemptId }),

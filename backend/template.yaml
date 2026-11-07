@@ -678,10 +678,13 @@ Resources:
             - Effect: Allow
               Action: [dynamodb:GetItem]
               Resource: !GetAtt ContentTable.Arn
-            # Pre-signed view URLs for team photos and photo answers.
+            # Pre-signed view URLs for team photos, photo answers and the question picture
+            # the team was given (content/, ADR-012).
             - Effect: Allow
               Action: s3:GetObject
-              Resource: !Sub ${AssetsBucket.Arn}/teams/*
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/teams/*
+                - !Sub ${AssetsBucket.Arn}/content/*
 
   AdminReviewsLogGroup:
     Type: AWS::Logs::LogGroup

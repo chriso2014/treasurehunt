@@ -71,16 +71,19 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
     void act(async () => onState(await hint(current.stage)));
   };
 
+  const isFinal = current.type === 'video_call';
   const doSkip = () => {
     const penalty = formatDuration(current.skipPenaltyMs);
-    if (
-      !window.confirm(`Skipping adds ${penalty} to your time and moves you to the next clue. Skip?`)
-    )
-      return;
+    const question = isFinal
+      ? `Forfeiting adds ${penalty} to your time and ends your game. Forfeit?`
+      : `Skipping adds ${penalty} to your time and moves you to the next clue. Skip?`;
+    if (!window.confirm(question)) return;
     setFlash('');
     void act(async () => {
       const next = await skip(current.stage);
-      if (next.current?.stage !== current.stage) setFlash('Skipped. Here’s your next clue.');
+      if (next.current && next.current.stage !== current.stage) {
+        setFlash('Skipped. Here’s your next clue.');
+      }
       onState(next);
     });
   };
@@ -93,8 +96,7 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
     });
 
   const startCall = () => {
-    if (!window.confirm('Ready to dance? Your timer pauses while you call the game master.'))
-      return;
+    if (!window.confirm('Ready? Your timer pauses while you video call the game master.')) return;
     void act(async () => onState(await videoCall(current.stage, crypto.randomUUID())));
   };
 
@@ -206,7 +208,8 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
           )}
           {current.canSkip && (
             <Button variant="secondary" onClick={doSkip} busy={busy}>
-              Skip this question (+{formatDuration(current.skipPenaltyMs)})
+              {isFinal ? 'Forfeit and finish' : 'Skip this question'} (+
+              {formatDuration(current.skipPenaltyMs)})
             </Button>
           )}
         </>
@@ -396,7 +399,7 @@ const AwaitingReview = ({ current }: { current: Current }) =>
   current.type === 'video_call' ? (
     <section className="flex flex-col gap-4 text-center">
       <p className="text-xl">
-        Your timer is paused. Video-call the game master on WhatsApp and perform your dance!
+        Your timer is paused. Video call the game master on WhatsApp and perform!
       </p>
       {current.whatsappUrl ? (
         <a

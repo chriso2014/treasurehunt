@@ -135,11 +135,28 @@ describe('POST /teams/me/current/skip', () => {
     expect(next!.Put!.Item).toMatchObject({ SK: 'STAGE#02', status: 'clue' });
   });
 
-  it('never skips the dance', async () => {
+  it('can forfeit the final call before it starts, which finishes the team', async () => {
     given(
       record({
         profile: profile({ currentStage: 3 }),
         stages: [stage({ stage: 3, questionId: 'q4', ...running, hintUsed: true })],
+      }),
+    );
+    const res = parse(await skip(teamEvent('team-1', { stage: 3 })));
+    expect(res.status).toBe(200);
+    const [stageUpdate, teamUpdate] =
+      db.commandCalls(TransactWriteCommand)[0]!.args[0].input.TransactItems!;
+    expect(stageUpdate!.Update!.ExpressionAttributeValues).toMatchObject({ ':done': 'skipped' });
+    expect(teamUpdate!.Update!.ExpressionAttributeValues).toMatchObject({
+      ':finished': 'finished',
+    });
+  });
+
+  it('cannot forfeit the final call once the game master is watching', async () => {
+    given(
+      record({
+        profile: profile({ currentStage: 3 }),
+        stages: [stage({ stage: 3, questionId: 'q4', status: 'awaiting_review', hintUsed: true })],
       }),
     );
     const res = parse(await skip(teamEvent('team-1', { stage: 3 })));

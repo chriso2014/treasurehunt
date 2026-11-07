@@ -271,6 +271,7 @@ describe('GET /admin/reviews', () => {
         teamName: 'The Wanderers',
         type: 'video_call',
         questionText: 'Dance!',
+        questionImageUrl: null,
         photoUrl: null,
       }),
     ]);

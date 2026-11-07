@@ -45,6 +45,8 @@ export const adminReviewSchema = z.object({
   attemptId: z.string(),
   type: z.enum(['photo', 'video_call']),
   questionText: z.string(),
+  /** The picture the team was shown (e.g. which meme to recreate), if any. */
+  questionImageUrl: z.string().nullable(),
   photoUrl: z.string().nullable(),
   submittedAt: z.string(),
 });

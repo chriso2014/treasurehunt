@@ -1,6 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { contentImageKeys, gameContentSchema, type GameContent } from './content.js';
+import {
+  contentImageKeys,
+  gameContentSchema,
+  questionImageKey,
+  type GameContent,
+  type Question,
+} from './content.js';
 
 const example = (): GameContent =>
   JSON.parse(
@@ -114,5 +120,52 @@ describe('contentImageKeys', () => {
     const content = example();
     content.questions[0]!.hint.imageKey = 'content/q2-clue.jpg';
     expect(contentImageKeys(content)).toEqual(['content/q2-clue.jpg']);
+  });
+});
+
+describe('questionImageKey', () => {
+  const pool = ['content/p0.jpg', 'content/p1.jpg', 'content/p2.jpg', 'content/p3.jpg'];
+  const withPool = (slot?: number): Question => ({
+    id: 'q',
+    type: 'photo',
+    location: { name: 'L', lat: 51.95, lng: -0.28 },
+    clue: { text: 'c' },
+    question: { text: 'Recreate this', randomImageKeys: pool, randomImageSlot: slot },
+    hint: { text: 'h' },
+  });
+
+  it('uses the fixed image when there is no pool', () => {
+    const q = { ...withPool(), question: { text: 't', imageKey: 'content/x.jpg' } };
+    expect(questionImageKey(q, 'team-1')).toBe('content/x.jpg');
+  });
+
+  it('picks the same pool image for a team every time', () => {
+    const key = questionImageKey(withPool(), 'team-1');
+    expect(pool).toContain(key);
+    expect(questionImageKey(withPool(), 'team-1')).toBe(key);
+  });
+
+  it('gives one team different images in different slots', () => {
+    expect(questionImageKey(withPool(0), 'team-1')).not.toBe(
+      questionImageKey(withPool(1), 'team-1'),
+    );
+  });
+
+  it('spreads teams across the pool', () => {
+    const picks = new Set(
+      ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((t) => questionImageKey(withPool(), t)),
+    );
+    expect(picks.size).toBeGreaterThan(1);
+  });
+
+  it('is listed for upload and refuses a fixed image as well', () => {
+    const content = example();
+    content.questions[0]!.question = { text: 't', randomImageKeys: ['content/m1.jpg'] };
+    expect(issues(content)).toEqual([]);
+    expect(contentImageKeys(content)).toContain('content/m1.jpg');
+    content.questions[0]!.question.imageKey = 'content/x.jpg';
+    expect(issues(content)).toEqual([
+      'questions.0.question: use imageKey or randomImageKeys, not both',
+    ]);
   });
 });
