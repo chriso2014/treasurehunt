@@ -93,8 +93,7 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
     });
 
   const startCall = () => {
-    if (!window.confirm('Ready to dance? Your timer pauses while you call the game master.'))
-      return;
+    if (!window.confirm('Ready? Your timer pauses while you video call the game master.')) return;
     void act(async () => onState(await videoCall(current.stage, crypto.randomUUID())));
   };
 
@@ -396,7 +395,7 @@ const AwaitingReview = ({ current }: { current: Current }) =>
   current.type === 'video_call' ? (
     <section className="flex flex-col gap-4 text-center">
       <p className="text-xl">
-        Your timer is paused. Video-call the game master on WhatsApp and perform your dance!
+        Your timer is paused. Video call the game master on WhatsApp and perform!
       </p>
       {current.whatsappUrl ? (
         <a

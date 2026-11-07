@@ -26,7 +26,7 @@
 4. The timer is **paused** while a submission is waiting for GM review (types 3 and 4). GM review speed must never affect a team's score.
 5. Every wrong answer or declined submission adds a **penalty**, and the team tries again (except type 4, see below).
 6. Each question has **one hint**. It can be requested at any time after Reveal while the question is open (not while a submission waits for GM review) and adds a **hint penalty**, once.
-6a. After using the hint, a team may **skip** the question. This adds a **skip penalty**, stops the timer, and moves them to the next clue. Skip is not available on the final `video_call` stage.
+6a. After using the hint, a team may **skip** the question. This adds a **skip penalty**, stops the timer, and moves them to the next clue. On the final `video_call` stage, skip (forfeit) is only possible before the call starts, and it finishes the team's game.
 6b. There is **no location check** (no GPS or QR). Reveal is available as soon as the clue is shown. Revealing early is the team's own risk, because the timer is running.
 7. After a correct answer the team sees the next clue. The completed location is added to their map.
 8. All timing is recorded **server-side**. Client clocks are display only.
@@ -116,7 +116,7 @@ locked → clue_shown → revealed (timer running)
            revealed → awaiting_review (timer paused)   [photo / video_call]
     awaiting_review → revealed (declined; penalty; timer resumes)  [photo]
     awaiting_review → completed (approved or video_call declined)
-           revealed → skipped (hint used + skip; penalty)  [not video_call]
+           revealed → skipped (hint used + skip; penalty)  [video_call: finishes the game]
            revealed → completed (correct answer)       [multiple_choice / multi_select / free_text]
 ```
 The timer is recorded as a list of running intervals (start/stop timestamps), so pauses are exact and auditable.

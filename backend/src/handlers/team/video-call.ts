@@ -23,7 +23,7 @@ export const handler = route(async (event: AuthedEvent) => {
     if (ctx.stage.status !== 'revealed') throw new AppError('INVALID_STATE', 'Reveal first');
     const question = await getQuestion(ctx.stage.questionId);
     if (question.type !== 'video_call') {
-      throw new AppError('INVALID_STATE', 'This question isn’t the dance');
+      throw new AppError('INVALID_STATE', 'This question isn’t the video call');
     }
     const now = clock.now();
     const attempt: AttemptItem = {

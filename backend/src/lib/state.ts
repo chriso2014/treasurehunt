@@ -131,7 +131,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
       hintPenaltyMs: penaltyFor('hint', question, contentConfig),
       skipPenaltyMs: penaltyFor('skip', question, contentConfig),
       hintUsed: stage.hintUsed,
-      canSkip: stage.hintUsed && stage.status === 'revealed' && question.type !== 'video_call',
+      canSkip: stage.hintUsed && stage.status === 'revealed',
       lastResult: latest ? { result: latest.result, reason: latest.reason ?? null } : null,
       whatsappUrl: question.type === 'video_call' && revealed ? (input.whatsappUrl ?? null) : null,
     };

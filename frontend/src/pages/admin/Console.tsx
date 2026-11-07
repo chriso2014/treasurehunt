@@ -195,7 +195,7 @@ const ReviewCard = ({
     <article className="flex flex-col gap-3 rounded-2xl border-2 border-amber-400 p-4">
       <p className="text-lg">
         <strong>{review.teamName}</strong> · stage {review.stage} ·{' '}
-        {review.type === 'photo' ? 'photo' : 'dance call'} · {time}
+        {review.type === 'photo' ? 'photo' : 'video call'} · {time}
       </p>
       <p className="text-slate-300">{review.questionText}</p>
       {review.questionImageUrl && (
@@ -215,7 +215,7 @@ const ReviewCard = ({
         </a>
       ) : (
         <p className="rounded-xl bg-slate-800 p-3">
-          The team is calling you on WhatsApp. Watch the dance, then decide.
+          The team is calling you on WhatsApp. Watch the performance, then decide.
         </p>
       )}
       <label className="flex flex-col gap-1">

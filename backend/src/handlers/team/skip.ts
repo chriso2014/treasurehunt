@@ -10,8 +10,8 @@ import { logger } from '../../lib/logger.js';
 import { completeStageItems } from '../../lib/progress.js';
 import { loadState } from '../../lib/state.js';
 
-// POST /teams/me/current/skip { stage }. Only after the hint, never on the final dance:
-// adds the skip penalty, stops the timer and opens the next clue.
+// POST /teams/me/current/skip { stage }. Only after the hint, and on the final call only before
+// it starts: adds the skip penalty, stops the timer and opens the next clue (or finishes the team).
 export const handler = route(async (event: AuthedEvent) => {
   const teamId = teamIdFrom(event);
   const { stage } = parseBody(event, skipRequestSchema);
@@ -19,8 +19,6 @@ export const handler = route(async (event: AuthedEvent) => {
 
   if (ctx) {
     const question = await getQuestion(ctx.stage.questionId);
-    if (question.type === 'video_call')
-      throw new AppError('INVALID_STATE', 'The dance can’t be skipped');
     if (!ctx.stage.hintUsed) throw new AppError('INVALID_STATE', 'Use the hint before skipping');
     if (ctx.stage.status !== 'revealed') {
       throw new AppError('INVALID_STATE', 'This question can’t be skipped right now');
