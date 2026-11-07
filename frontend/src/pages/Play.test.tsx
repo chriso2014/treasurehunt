@@ -268,6 +268,24 @@ describe('Play', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Skipped');
   });
 
+  it('on the final call, warns that forfeiting ends the game', async () => {
+    const onState = vi.fn();
+    const finished = state(null);
+    vi.mocked(client.skip).mockResolvedValue(finished);
+    const c = revealedMc({
+      type: 'video_call',
+      question: { text: 'Sing!', imageUrl: null, options: null },
+      hintUsed: true,
+      canSkip: true,
+      skipPenaltyMs: 600_000,
+    });
+    render(<Play state={state(c)} receivedAt={Date.now()} onState={onState} onReload={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Forfeit and finish (+10:00)' }));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('ends your game'));
+    expect(onState).toHaveBeenCalledWith(finished);
+    expect(screen.queryByText(/next clue/)).not.toBeInTheDocument();
+  });
+
   describe('photo questions', () => {
     const photoQ = (overrides: Partial<CurrentStage> = {}) =>
       revealedMc({
