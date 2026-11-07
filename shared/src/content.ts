@@ -28,7 +28,16 @@ const clue = z
   .strictObject({ text: z.string().min(1).optional(), ...image })
   .refine((c) => c.text || c.imageKey, 'needs text or imageKey');
 
-const prompt = z.strictObject({ text: z.string().min(1), ...image });
+const prompt = z
+  .strictObject({
+    text: z.string().min(1),
+    ...image,
+    /** A pool of pictures: each team is shown one of them, picked from its team id (ADR-012). */
+    randomImageKeys: z.array(imageKey).min(1).optional(),
+    /** Offset into the pool, so questions sharing a pool show a team different pictures. */
+    randomImageSlot: z.number().int().nonnegative().optional(),
+  })
+  .refine((p) => !(p.imageKey && p.randomImageKeys), 'use imageKey or randomImageKeys, not both');
 
 const hint = z
   .strictObject({ text: z.string().min(1).optional(), ...image })
@@ -190,7 +199,32 @@ export type RouteName = keyof GameContent['routes'];
 export const contentImageKeys = (content: GameContent): string[] => [
   ...new Set(
     content.questions
-      .flatMap((q) => [q.clue.imageKey, q.question.imageKey, q.hint.imageKey])
+      .flatMap((q) => [
+        q.clue.imageKey,
+        q.question.imageKey,
+        ...(q.question.randomImageKeys ?? []),
+        q.hint.imageKey,
+      ])
       .filter((k): k is string => k !== undefined),
   ),
 ];
+
+/** FNV-1a: a small, stable string hash, the same on every server. */
+const hash = (text: string): number => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+};
+
+/**
+ * The question picture this team sees: its fixed image, or one from the random pool. The pick
+ * depends only on the team id and slot, so it survives refreshes and needs nothing stored.
+ */
+export const questionImageKey = (question: Question, teamId: string): string | undefined => {
+  const pool = question.question.randomImageKeys;
+  if (!pool) return question.question.imageKey;
+  return pool[(hash(teamId) + (question.question.randomImageSlot ?? 0)) % pool.length];
+};

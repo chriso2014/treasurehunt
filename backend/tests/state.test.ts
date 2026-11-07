@@ -56,6 +56,33 @@ describe('buildState', () => {
     expect(JSON.stringify(state)).not.toContain('Look up');
   });
 
+  it('shows one picture from a random pool, the same one on every refresh', async () => {
+    const pool = ['content/m0.jpg', 'content/m1.jpg', 'content/m2.jpg'];
+    const meme: Question = {
+      ...q4,
+      id: 'q5',
+      type: 'photo',
+      question: { text: 'Recreate this', randomImageKeys: pool },
+    };
+    const revealed = () =>
+      build({
+        questions: new Map([...questions, ['q5', meme]]),
+        record: record({
+          stages: [
+            stage({
+              questionId: 'q5',
+              status: 'revealed',
+              runningSince: '2026-10-28T10:08:00.000Z',
+            }),
+          ],
+        }),
+      });
+    const url = (await revealed()).current?.question?.imageUrl;
+    expect(pool.map((k) => `https://signed/${k}`)).toContain(url);
+    expect((await revealed()).current?.question?.imageUrl).toBe(url);
+    expect(JSON.stringify(await revealed())).not.toContain('randomImageKeys');
+  });
+
   it('never includes accepted text answers', async () => {
     const state = await build({
       record: record({

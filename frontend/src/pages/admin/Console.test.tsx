@@ -57,6 +57,7 @@ describe('GM console', () => {
           attemptId: 'a1',
           type: 'photo',
           questionText: 'Troll faces on the bridge',
+          questionImageUrl: 'https://signed/given.jpg',
           photoUrl: 'https://signed/photo.jpg',
           submittedAt: '2026-10-28T12:00:00.000Z',
         },
@@ -64,6 +65,10 @@ describe('GM console', () => {
     });
     renderConsole();
     expect(await screen.findByText('Troll faces on the bridge')).toBeInTheDocument();
+    expect(screen.getByAltText('The picture the team was given')).toHaveAttribute(
+      'src',
+      'https://signed/given.jpg',
+    );
     expect(screen.getByAltText("Trolls's photo")).toHaveAttribute(
       'src',
       'https://signed/photo.jpg',

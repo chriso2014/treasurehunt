@@ -55,7 +55,7 @@
 - Wrong / correct: same as type 1.
 
 ### Type 3: `photo`
-- Team sees: question/task text describing what to photograph.
+- Team sees: question/task text describing what to photograph. Optionally a picture, which can be picked per team from a pool (e.g. a different meme to recreate for each team; ADR-012). The GM's review card shows the picture the team was given.
 - Answer: take or upload a photo and submit.
 - Checking: **manual GM review in real time** against the GM's criteria.
 - Timer: **pauses** on submission and stays paused until the GM decides.

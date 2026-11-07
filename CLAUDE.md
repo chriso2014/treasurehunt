@@ -72,4 +72,4 @@ npm run e2e:dev                  # full scripted game against dev (after a reset
 | `docs/11-observability-ops.md` | Logging, alarms, game-day runbook |
 | `docs/12-serverless-overview.md` | Learning guide: diagram, services, request flows, serverless patterns |
 | `docs/roadmap.md` | Phases and status |
-| `docs/decisions/` | ADRs 001–011 (010 = optional cartoon photo, proposed; 011 = pre-bundled Lambdas) |
+| `docs/decisions/` | ADRs 001–012 (010 = optional cartoon photo, proposed; 011 = pre-bundled Lambdas; 012 = random question pictures) |

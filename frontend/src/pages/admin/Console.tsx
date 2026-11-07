@@ -198,6 +198,13 @@ const ReviewCard = ({
         {review.type === 'photo' ? 'photo' : 'dance call'} · {time}
       </p>
       <p className="text-slate-300">{review.questionText}</p>
+      {review.questionImageUrl && (
+        <SafeImage
+          src={review.questionImageUrl}
+          alt="The picture the team was given"
+          className="max-h-48 self-start rounded-xl"
+        />
+      )}
       {review.photoUrl ? (
         <a href={review.photoUrl} target="_blank" rel="noreferrer">
           <SafeImage
