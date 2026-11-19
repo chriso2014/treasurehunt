@@ -21,7 +21,7 @@ Question item:
 ```
 id, type: multiple_choice | multi_select | free_text | photo | video_call
 location:  { name, lat, lng }          // WGS84 decimal degrees, 5 dp (~1 m); e.g. 51.94912, -0.28013
-clue:      { text?, imageKey? }          // leads team to the location
+clue:      { text?, imageKey?, byRoute?: { A?, B? } }  // leads team to the location; byRoute gives a route its own { text?, imageKey? }
 question:  { text, imageKey?, randomImageKeys?, randomImageSlot? }  // shown on Reveal; a pool shows each team one picture (ADR-012)
 options?:  [{ id, text }]                // multiple_choice, multi_select
 correctOptionId?                          // multiple_choice (never sent to client)
