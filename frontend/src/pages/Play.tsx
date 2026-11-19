@@ -36,6 +36,13 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
   const [flash, setFlash] = useState('');
   const [showMap, setShowMap] = useState(false);
 
+  // A new stage replaces the page: start it from the top, not where the last answer was.
+  const firstStage = useRef(current.stage);
+  useEffect(() => {
+    if (current.stage !== firstStage.current) window.scrollTo({ top: 0 });
+    firstStage.current = current.stage;
+  }, [current.stage]);
+
   const running = current.timer.running;
   const stageMs = useTicker(current.timer.elapsedMs, running, receivedAt);
   const totalMs = useTicker(state.team.totalMs, running, receivedAt);
