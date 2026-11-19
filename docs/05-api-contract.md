@@ -51,6 +51,7 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
   },
   "completedLocations": [ { "name": "...", "lat": 51.95, "lng": -0.28 } ],
   "map": { "centre": { "lat": 51.949, "lng": -0.28 }, "zoom": 15 },
+  "finishMessage": null,              // config.finishMessage once the team or game has finished
   "results": [ { "stage": 1, "outcome": "correct", "timeMs": 192000, "penaltyMs": 300000,
                  "penalties": [ { "kind": "wrong", "count": 1, "ms": 300000 } ] } ],
   "serverTime": "2026-...Z"

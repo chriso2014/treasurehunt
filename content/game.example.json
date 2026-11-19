@@ -3,6 +3,7 @@
   "config": {
     "title": "Hitchin Treasure Hunt",
     "defaultPenaltyMs": 300000,
+    "finishMessage": "Well done! Meet everyone at the finish point.",
     "map": {
       "centre": {
         "lat": 51.949,

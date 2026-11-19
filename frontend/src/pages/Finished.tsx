@@ -57,6 +57,11 @@ export const Finished = ({ state }: { state: TeamState }) => (
     {state.team.status !== 'finished' && (
       <p className="text-center text-lg">The game master has ended the game.</p>
     )}
+    {state.finishMessage && (
+      <p className="whitespace-pre-line rounded-2xl bg-amber-300 p-4 text-center text-xl font-semibold text-slate-900">
+        {state.finishMessage}
+      </p>
+    )}
     <p className="text-center text-lg text-slate-300">Your total time</p>
     <p className="text-center font-mono text-5xl font-bold text-amber-300">
       {formatDuration(state.team.totalMs)}

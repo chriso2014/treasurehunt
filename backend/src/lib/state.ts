@@ -152,6 +152,10 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
     current,
     completedLocations,
     map: contentConfig.map,
+    finishMessage:
+      profile.status === 'finished' || gameStatus === 'finished'
+        ? (contentConfig.finishMessage ?? null)
+        : null,
     results: done.map((s) =>
       stageResult(s, questions.get(s.questionId), contentConfig, record.attempts),
     ),

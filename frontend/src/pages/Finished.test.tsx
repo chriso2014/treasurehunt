@@ -18,6 +18,7 @@ const state: TeamState = {
   current: null,
   completedLocations: [],
   map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
+  finishMessage: null,
   serverTime: '2026-10-28T10:00:00.000Z',
   results: [
     { stage: 1, outcome: 'correct', timeMs: 120_000, penaltyMs: 0, penalties: [] },
@@ -48,5 +49,10 @@ describe('Finished', () => {
     expect(q2).toHaveTextContent('Wrong answer+5:00');
     expect(q2).toHaveTextContent('Hint+5:00');
     expect(q2).toHaveTextContent('Skipped+5:00');
+  });
+
+  it('shows the finish message from the content', () => {
+    render(<Finished state={{ ...state, finishMessage: 'Meet at the bandstand.' }} />);
+    expect(screen.getByText('Meet at the bandstand.')).toBeInTheDocument();
   });
 });
