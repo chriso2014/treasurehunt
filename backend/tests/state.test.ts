@@ -37,6 +37,20 @@ describe('buildState', () => {
     expect(state.team).toMatchObject({ stage: 1, stageCount: 3, totalMs: 0 });
   });
 
+  it("shows a route's own clue to teams on that route only", async () => {
+    const twoWays: Question = {
+      ...q1,
+      clue: { text: 'From the north', byRoute: { B: { text: 'From the south' } } },
+    };
+    const forRoute = (route: 'A' | 'B') =>
+      build({
+        questions: new Map([...questions, ['q1', twoWays]]),
+        record: record({ profile: profile({ route }) }),
+      });
+    expect((await forRoute('A')).current?.clue).toEqual({ text: 'From the north', imageUrl: null });
+    expect((await forRoute('B')).current?.clue).toEqual({ text: 'From the south', imageUrl: null });
+  });
+
   it('after Reveal shows the question and options but never the correct answer', async () => {
     const state = await build({
       record: record({

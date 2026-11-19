@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  clueFor,
   contentImageKeys,
   gameContentSchema,
   questionImageKey,
@@ -120,6 +121,40 @@ describe('contentImageKeys', () => {
     const content = example();
     content.questions[0]!.hint.imageKey = 'content/q2-clue.jpg';
     expect(contentImageKeys(content)).toEqual(['content/q2-clue.jpg']);
+  });
+});
+
+describe('clueFor', () => {
+  const question = (clue: Question['clue']): Question => ({
+    id: 'q',
+    type: 'free_text',
+    location: { name: 'L', lat: 51.95, lng: -0.28 },
+    clue,
+    question: { text: 't' },
+    hint: { text: 'h' },
+    acceptedAnswers: ['a'],
+  });
+
+  it('gives a route its own version when there is one', () => {
+    const q = question({ text: 'main', byRoute: { B: { text: 'from the other way' } } });
+    expect(clueFor(q, 'B')).toEqual({ text: 'from the other way' });
+  });
+
+  it('falls back to the main clue for a route without its own version', () => {
+    const q = question({ text: 'main', byRoute: { B: { text: 'from the other way' } } });
+    expect(clueFor(q, 'A').text).toBe('main');
+  });
+
+  it('rejects an empty route version', () => {
+    const content = example();
+    content.questions[0]!.clue.byRoute = { A: {} };
+    expect(issues(content)).toEqual(['questions.0.clue.byRoute.A: needs text or imageKey']);
+  });
+
+  it('lists route version images for upload', () => {
+    const content = example();
+    content.questions[0]!.clue.byRoute = { B: { imageKey: 'content/b-clue.jpg' } };
+    expect(contentImageKeys(content)).toContain('content/b-clue.jpg');
   });
 });
 

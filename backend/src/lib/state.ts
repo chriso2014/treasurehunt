@@ -13,7 +13,7 @@ import {
   type TeamRecord,
 } from './game.js';
 import { getContentConfig, getQuestion, getRoute, penaltyFor } from './content.js';
-import { questionImageKey } from '@treasurehunt/shared';
+import { clueFor, questionImageKey } from '@treasurehunt/shared';
 import { clock } from './clock.js';
 import { viewUrl } from './s3.js';
 import { gmWhatsappUrl } from './whatsapp.js';
@@ -98,13 +98,14 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
       .filter((a) => a.stage === stage.stage)
       .sort((a, b) => a.submittedAt.localeCompare(b.submittedAt))
       .at(-1);
+    const clue = clueFor(question, profile.route);
     current = {
       stage: stage.stage,
       status: stage.status,
       type: question.type,
       clue: {
-        text: question.clue.text ?? null,
-        imageUrl: await optionalUrl(signUrl, question.clue.imageKey),
+        text: clue.text ?? null,
+        imageUrl: await optionalUrl(signUrl, clue.imageKey),
       },
       question: revealed
         ? {

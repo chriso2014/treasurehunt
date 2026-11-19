@@ -24,8 +24,20 @@ const location = z
   .strictObject({ name: z.string().min(1), lat: z.number(), lng: z.number() })
   .refine(inHitchin, inHitchinMessage);
 
-const clue = z
+const clueVersion = z
   .strictObject({ text: z.string().min(1).optional(), ...image })
+  .refine((c) => c.text || c.imageKey, 'needs text or imageKey');
+
+/**
+ * The clue leading to a question. `byRoute` gives a route its own version, for a place that
+ * the two routes reach from different directions; a route without one sees the main clue.
+ */
+const clue = z
+  .strictObject({
+    text: z.string().min(1).optional(),
+    ...image,
+    byRoute: z.strictObject({ A: clueVersion.optional(), B: clueVersion.optional() }).optional(),
+  })
   .refine((c) => c.text || c.imageKey, 'needs text or imageKey');
 
 const prompt = z
@@ -201,6 +213,8 @@ export const contentImageKeys = (content: GameContent): string[] => [
     content.questions
       .flatMap((q) => [
         q.clue.imageKey,
+        q.clue.byRoute?.A?.imageKey,
+        q.clue.byRoute?.B?.imageKey,
         q.question.imageKey,
         ...(q.question.randomImageKeys ?? []),
         q.hint.imageKey,
@@ -208,6 +222,12 @@ export const contentImageKeys = (content: GameContent): string[] => [
       .filter((k): k is string => k !== undefined),
   ),
 ];
+
+/** The clue a team on this route sees: its route's own version if there is one. */
+export const clueFor = (
+  question: Question,
+  route: RouteName,
+): { text?: string; imageKey?: string } => question.clue.byRoute?.[route] ?? question.clue;
 
 /** FNV-1a: a small, stable string hash, the same on every server. */
 const hash = (text: string): number => {
