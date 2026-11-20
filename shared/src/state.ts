@@ -63,7 +63,14 @@ export const currentStageSchema = z.object({
   hintUsed: z.boolean(),
   canSkip: z.boolean(),
   /** Outcome of the latest attempt at this stage, e.g. a wrong answer. */
-  lastResult: z.object({ result: attemptResultSchema, reason: z.string().nullable() }).nullable(),
+  lastResult: z
+    .object({
+      result: attemptResultSchema,
+      reason: z.string().nullable(),
+      /** Tick boxes, wrong answer: how many of the team's ticks were right. Else null. */
+      ticks: z.object({ right: z.number().int(), ticked: z.number().int() }).nullable(),
+    })
+    .nullable(),
   whatsappUrl: z.string().nullable(),
 });
 export type CurrentStage = z.infer<typeof currentStageSchema>;

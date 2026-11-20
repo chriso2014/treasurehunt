@@ -134,7 +134,24 @@ describe('buildState', () => {
       }),
     });
     expect(state.team.totalMs).toBe(90_000 + 300_000 + 70_000 + 60_000);
-    expect(state.current?.lastResult).toEqual({ result: 'wrong', reason: null });
+    expect(state.current?.lastResult).toEqual({ result: 'wrong', reason: null, ticks: null });
+  });
+
+  it('after a wrong tick-box answer, says how many ticks were right', async () => {
+    const state = await build({
+      record: record({
+        stages: [
+          stage({ questionId: 'q3', status: 'revealed', runningSince: '2026-10-28T10:08:00.000Z' }),
+        ],
+        attempts: [attempt({ questionId: 'q3', type: 'multi_select', value: 'a,b' })],
+      }),
+    });
+    expect(state.current?.lastResult).toEqual({
+      result: 'wrong',
+      reason: null,
+      ticks: { right: 1, ticked: 2 },
+    });
+    expect(JSON.stringify(state)).not.toContain('correctOptionIds');
   });
 
   it('lists only completed locations, in stage order', async () => {

@@ -46,7 +46,7 @@ Action bodies carry `stage` (the stage the client is acting on): if the team has
     "hint": null,
     "timer": { "elapsedMs": 95000, "running": true, "serverTime": "2026-...Z" },
     "penaltyMs": 300000, "hintPenaltyMs": 300000, "skipPenaltyMs": 300000, "hintUsed": false, "canSkip": false,
-    "lastResult": { "result": "declined", "reason": "Whole team must be in shot" },
+    "lastResult": { "result": "declined", "reason": "Whole team must be in shot", "ticks": null },  // ticks: { right, ticked } after a wrong tick-box answer
     "whatsappUrl": null
   },
   "completedLocations": [ { "name": "...", "lat": 51.95, "lng": -0.28 } ],

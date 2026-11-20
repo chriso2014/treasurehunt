@@ -173,10 +173,19 @@ describe('Play', () => {
     expect(second![1]).toBe(first![1]);
   });
 
+  it('after a wrong tick-box answer, says how many ticks were right', () => {
+    const c = revealedMc({
+      type: 'multi_select',
+      lastResult: { result: 'wrong', reason: null, ticks: { right: 5, ticked: 8 } },
+    });
+    render(<Play state={state(c)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('5 of your 8 ticks were right.');
+  });
+
   it('shows a wrong answer with the penalties so far', () => {
     const c = revealedMc({
       penaltyMs: 300_000,
-      lastResult: { result: 'wrong', reason: null },
+      lastResult: { result: 'wrong', reason: null, ticks: null },
     });
     render(<Play state={state(c)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />);
     expect(screen.getByRole('alert')).toHaveTextContent('Not quite');
@@ -369,7 +378,7 @@ describe('Play', () => {
     it('shows why a photo was declined', () => {
       const c = photoQ({
         penaltyMs: 300_000,
-        lastResult: { result: 'declined', reason: 'Whole team must be in shot' },
+        lastResult: { result: 'declined', reason: 'Whole team must be in shot', ticks: null },
       });
       render(
         <Play state={state(c)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />,
