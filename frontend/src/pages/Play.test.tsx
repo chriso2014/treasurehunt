@@ -70,6 +70,7 @@ const state = (c: CurrentStage | null, totalMs = 0): TeamState => ({
   current: c,
   completedLocations: [],
   map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
+  finishMessage: null,
   serverTime: '2026-10-28T10:00:00.000Z',
   results: [],
 });
@@ -208,6 +209,36 @@ describe('Play', () => {
     await userEvent.type(screen.getByRole('textbox'), ' 1850 ');
     await userEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
     expect(client.answer).toHaveBeenCalledWith(1, expect.any(String), { text: '1850' });
+  });
+
+  it('scrolls back to the top when the next stage loads', () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const { rerender } = render(
+      <Play
+        state={state(revealedMc())}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    rerender(
+      <Play
+        state={state(revealedMc({ penaltyMs: 300_000 }))}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    expect(scrollTo).not.toHaveBeenCalled();
+    rerender(
+      <Play
+        state={state(current({ stage: 2 }))}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
   });
 
   it('confirms the hint penalty, then shows the hint', async () => {

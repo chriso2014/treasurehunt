@@ -12,7 +12,7 @@ Loaded by `npm run seed` from `content/game.private.json` (gitignored). Read-onl
 
 | PK | SK | Attributes |
 |----|----|-----------|
-| `CONFIG` | `CONFIG` | `title`, `defaultPenaltyMs` (300000), `map: { centre: {lat, lng}, zoom }` (default view before any location is completed) |
+| `CONFIG` | `CONFIG` | `title`, `defaultPenaltyMs` (300000), `map: { centre: {lat, lng}, zoom }` (default view before any location is completed), `finishMessage?` (shown on the finish screen, e.g. where to meet; sent only once finished) |
 | `ROUTE#A` | `ROUTE` | `questionIds`: ordered list, last item is the dance question |
 | `ROUTE#B` | `ROUTE` | `questionIds`: same set as A, different order |
 | `QUESTION#<id>` | `QUESTION` | see below |

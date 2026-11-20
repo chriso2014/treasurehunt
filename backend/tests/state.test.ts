@@ -151,6 +151,19 @@ describe('buildState', () => {
     expect(state.completedLocations.map((l) => l.name)).toEqual(['Square', 'Church']);
   });
 
+  it('sends the finish message only once the team has finished', async () => {
+    const config = { ...contentConfig, finishMessage: 'Meet at the bandstand.' };
+    expect((await build({ contentConfig: config })).finishMessage).toBeNull();
+    const done = await build({
+      contentConfig: config,
+      record: record({ profile: profile({ status: 'finished' }), stages: [] }),
+    });
+    expect(done.finishMessage).toBe('Meet at the bandstand.');
+    expect((await build({ contentConfig: config, gameStatus: 'finished' })).finishMessage).toBe(
+      'Meet at the bandstand.',
+    );
+  });
+
   it('has no current stage before the start or after finishing', async () => {
     const waiting = await build({
       gameStatus: 'registration',

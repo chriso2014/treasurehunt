@@ -102,6 +102,8 @@ export const teamStateSchema = z.object({
   completedLocations: z.array(z.object({ name: z.string(), lat: z.number(), lng: z.number() })),
   /** Where the map starts before anything is completed (content config). */
   map: z.object({ centre: z.object({ lat: z.number(), lng: z.number() }), zoom: z.number() }),
+  /** The content's finish screen message, once the team or the game has finished; else null. */
+  finishMessage: z.string().nullable(),
   /** Finished stages in order, for the breakdown of the team's time. */
   results: z.array(stageResultSchema),
   /** When the server built this state: the client keeps whichever response is newest. */

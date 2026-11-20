@@ -152,6 +152,8 @@ export const gameContentSchema = z
     config: z.strictObject({
       title: z.string().min(1),
       defaultPenaltyMs: durationMs,
+      /** Shown on the finish screen, e.g. where to meet afterwards. Sent only once finished. */
+      finishMessage: z.string().min(1).optional(),
       map: z.strictObject({
         centre: point.refine(inHitchin, inHitchinMessage),
         zoom: z.number().int().min(1).max(20),
