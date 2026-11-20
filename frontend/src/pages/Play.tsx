@@ -188,8 +188,10 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
         <>
           {current.lastResult?.result === 'wrong' && (
             <p role="alert" className="rounded-xl bg-red-900 px-4 py-3 text-lg">
-              Not quite, try again! Penalties on this question so far:{' '}
-              {formatDuration(current.penaltyMs)}
+              Not quite, try again!
+              {current.lastResult.ticks &&
+                ` ${current.lastResult.ticks.right} of your ${current.lastResult.ticks.ticked} ticks ${current.lastResult.ticks.right === 1 ? 'was' : 'were'} right.`}{' '}
+              Penalties on this question so far: {formatDuration(current.penaltyMs)}
             </p>
           )}
           {current.lastResult?.result === 'declined' && (

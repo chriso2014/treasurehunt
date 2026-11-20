@@ -70,6 +70,14 @@ const stageResult = (
   };
 };
 
+/** For a wrong tick-box answer, how many of the ticks were right (the value is "a,c,f"). */
+const ticks = (question: Question, attempt: AttemptItem) => {
+  if (question.type !== 'multi_select' || attempt.result !== 'wrong') return null;
+  const ticked = attempt.value ? attempt.value.split(',') : [];
+  const right = ticked.filter((id) => question.correctOptionIds.includes(id)).length;
+  return { right, ticked: ticked.length };
+};
+
 export const buildState = async (input: StateInput): Promise<TeamState> => {
   const { gameStatus, record, stageCount, contentConfig, questions, now, signUrl } = input;
   const { profile } = record;
@@ -133,7 +141,9 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
       skipPenaltyMs: penaltyFor('skip', question, contentConfig),
       hintUsed: stage.hintUsed,
       canSkip: stage.hintUsed && stage.status === 'revealed',
-      lastResult: latest ? { result: latest.result, reason: latest.reason ?? null } : null,
+      lastResult: latest
+        ? { result: latest.result, reason: latest.reason ?? null, ticks: ticks(question, latest) }
+        : null,
       whatsappUrl: question.type === 'video_call' && revealed ? (input.whatsappUrl ?? null) : null,
     };
   }
