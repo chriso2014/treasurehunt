@@ -68,7 +68,11 @@ export const currentStageSchema = z.object({
       result: attemptResultSchema,
       reason: z.string().nullable(),
       /** Tick boxes, wrong answer: how many of the team's ticks were right. Else null. */
-      ticks: z.object({ right: z.number().int(), ticked: z.number().int() }).nullable(),
+      // Defaults to null so an app newer than the server still reads its state.
+      ticks: z
+        .object({ right: z.number().int(), ticked: z.number().int() })
+        .nullable()
+        .default(null),
     })
     .nullable(),
   whatsappUrl: z.string().nullable(),

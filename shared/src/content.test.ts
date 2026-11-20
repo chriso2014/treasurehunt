@@ -116,6 +116,16 @@ describe('gameContentSchema', () => {
   });
 });
 
+describe('option ids', () => {
+  it('rejects an option id with a comma (attempts store ticks comma-joined)', () => {
+    const content = example();
+    const q = content.questions[0];
+    if (q?.type !== 'multiple_choice') throw new Error('expected q1 to be multiple_choice');
+    q.options[0]!.id = 'a,b';
+    expect(issues(content)).toContain('questions.0.options.0.id: letters, digits, - and _ only');
+  });
+});
+
 describe('contentImageKeys', () => {
   it('lists each referenced image once', () => {
     const content = example();

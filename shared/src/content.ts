@@ -55,6 +55,9 @@ const hint = z
   .strictObject({ text: z.string().min(1).optional(), ...image })
   .refine((h) => h.text || h.imageKey, 'needs text or imageKey');
 
+/** Option ids are stored comma-joined in an attempt, so they can't contain commas. */
+const optionId = z.string().regex(/^[\w-]+$/, 'letters, digits, - and _ only');
+
 const durationMs = z.number().int().nonnegative();
 
 const penaltyMs = z.strictObject({
@@ -79,7 +82,7 @@ const multipleChoice = z
   .strictObject({
     ...base,
     type: z.literal('multiple_choice'),
-    options: z.array(z.strictObject({ id: z.string().min(1), text: z.string().min(1) })).min(2),
+    options: z.array(z.strictObject({ id: optionId, text: z.string().min(1) })).min(2),
     correctOptionId: z.string().min(1),
   })
   .refine((q) => q.options.some((o) => o.id === q.correctOptionId), {
@@ -97,7 +100,7 @@ const multiSelect = z
     type: z.literal('multi_select'),
     // At most 30: the answer request accepts up to 30 ticked ids.
     options: z
-      .array(z.strictObject({ id: z.string().min(1), text: z.string().min(1) }))
+      .array(z.strictObject({ id: optionId, text: z.string().min(1) }))
       .min(2)
       .max(30),
     /** Every option that must be ticked; the answer is right only if exactly these are ticked. */
