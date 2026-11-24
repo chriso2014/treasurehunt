@@ -168,6 +168,16 @@ describe('buildState', () => {
     expect(state.completedLocations.map((l) => l.name)).toEqual(['Square', 'Church']);
   });
 
+  it('sends the help link only while the team is playing', async () => {
+    const url = 'https://wa.me/440000000000';
+    expect((await build({ whatsappUrl: url })).helpUrl).toBe(url);
+    const done = await build({
+      whatsappUrl: url,
+      record: record({ profile: profile({ status: 'finished' }), stages: [] }),
+    });
+    expect(done.helpUrl).toBeNull();
+  });
+
   it('sends the finish message only once the team has finished', async () => {
     const config = { ...contentConfig, finishMessage: 'Meet at the bandstand.' };
     expect((await build({ contentConfig: config })).finishMessage).toBeNull();
