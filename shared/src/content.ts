@@ -84,6 +84,8 @@ const multipleChoice = z
     type: z.literal('multiple_choice'),
     options: z.array(z.strictObject({ id: optionId, text: z.string().min(1) })).min(2),
     correctOptionId: z.string().min(1),
+    /** One guess only: a wrong answer adds the wrong penalty and moves on to the next clue. */
+    oneGuess: z.boolean().optional(),
   })
   .refine((q) => q.options.some((o) => o.id === q.correctOptionId), {
     message: 'correctOptionId must be one of the options',

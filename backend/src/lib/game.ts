@@ -61,7 +61,8 @@ export type StageItem = {
   hintUsed: boolean;
   skipped: boolean;
   penaltyMs: number;
-  outcome?: 'correct' | 'approved' | 'declined' | 'skipped' | 'gm_accepted';
+  /** `wrong`: a one-guess question answered wrongly, which still moves the team on. */
+  outcome?: 'correct' | 'wrong' | 'approved' | 'declined' | 'skipped' | 'gm_accepted';
 };
 
 export type AttemptItem = {

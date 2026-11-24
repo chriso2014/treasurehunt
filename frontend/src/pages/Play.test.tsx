@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { CurrentStage, TeamState } from '@treasurehunt/shared';
 import * as client from '../api/client.js';
@@ -196,6 +196,43 @@ describe('Play', () => {
       'href',
       'https://wa.me/440000000000',
     );
+  });
+
+  it('after the only guess on a one-guess question is wrong, says so and moves on', async () => {
+    const next = state(current({ stage: 2 }));
+    vi.mocked(client.answer).mockResolvedValue({ correct: false, state: next });
+    const onState = vi.fn();
+    render(
+      <Play
+        state={state(revealedMc())}
+        receivedAt={Date.now()}
+        onState={onState}
+        onReload={vi.fn()}
+      />,
+    );
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'a');
+    await userEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
+    expect(onState).toHaveBeenCalledWith(next);
+    expect(await screen.findByRole('status')).toHaveTextContent('that was your only guess');
+  });
+
+  it('does not report a wrong answer when a late retry returns the next stage', async () => {
+    vi.mocked(client.answer).mockResolvedValue({
+      correct: null,
+      state: state(current({ stage: 2 })),
+    });
+    render(
+      <Play
+        state={state(revealedMc())}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'b');
+    await userEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
+    await waitFor(() => expect(client.answer).toHaveBeenCalled());
+    expect(screen.queryByText(/only guess/)).not.toBeInTheDocument();
   });
 
   it('shows a wrong answer with the penalties so far', () => {

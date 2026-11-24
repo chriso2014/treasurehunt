@@ -110,7 +110,14 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
   const submit = (value: Answer, attemptId: string) =>
     act(async () => {
       const res = await answer(current.stage, attemptId, value);
-      setFlash(res.correct ? 'Correct! Here’s your next clue.' : '');
+      const movedOn = res.state.current?.stage !== current.stage;
+      setFlash(
+        res.correct
+          ? 'Correct! Here’s your next clue.'
+          : res.correct === false && movedOn
+            ? 'Wrong, and that was your only guess: penalty added. Here’s your next clue.'
+            : '',
+      );
       onState(res.state);
     });
 

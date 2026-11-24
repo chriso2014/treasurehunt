@@ -25,6 +25,7 @@ clue:      { text?, imageKey?, byRoute?: { A?, B? } }  // leads team to the loca
 question:  { text, imageKey?, randomImageKeys?, randomImageSlot? }  // shown on Reveal; a pool shows each team one picture (ADR-012)
 options?:  [{ id, text }]                // multiple_choice, multi_select
 correctOptionId?                          // multiple_choice (never sent to client)
+oneGuess?: boolean                         // multiple_choice: one guess only; a wrong answer adds the wrong penalty and moves on (outcome `wrong`)
 correctOptionIds?: [string]               // multi_select: exactly these must be ticked (never sent)
 wrongOptionPenaltyMs?                     // multi_select: penalty per wrong option instead of `wrong`
 acceptedAnswers?: [string]                // free_text (never sent to client)

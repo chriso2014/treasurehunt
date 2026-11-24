@@ -82,7 +82,7 @@ export type CurrentStage = z.infer<typeof currentStageSchema>;
 /** One finished stage on the end screen's "See more about your time". */
 export const stageResultSchema = z.object({
   stage: z.number().int(),
-  outcome: z.enum(['correct', 'approved', 'declined', 'skipped', 'gm_accepted']),
+  outcome: z.enum(['correct', 'wrong', 'approved', 'declined', 'skipped', 'gm_accepted']),
   /** Time the clock ran, excluding penalties. */
   timeMs: z.number(),
   penaltyMs: z.number(),
