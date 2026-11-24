@@ -175,6 +175,31 @@ describe('POST /teams/me/current/answer', () => {
     });
   });
 
+  it('on a one-guess question, a wrong answer adds the penalty and moves on', async () => {
+    db.on(GetCommand, {
+      TableName: 'content-table',
+      Key: { PK: 'QUESTION#q1', SK: 'QUESTION' },
+    }).resolves({ Item: { ...q1, oneGuess: true } });
+    given(revealed());
+    const res = parse(
+      await answer(teamEvent('team-1', { stage: 1, attemptId: ATTEMPT, optionId: 'a' })),
+    );
+    expect(res.body.correct).toBe(false);
+    const [put, stageUpdate, teamUpdate, nextStage] = transactItems();
+    expect(put!.Put!.Item).toMatchObject({ result: 'wrong', penaltyMs: 300_000 });
+    expect(stageUpdate!.Update!.ExpressionAttributeValues).toMatchObject({
+      ':done': 'completed',
+      ':outcome': 'wrong',
+      ':penaltyMs': 300_000,
+      ':wrong': 1,
+    });
+    expect(teamUpdate!.Update!.ExpressionAttributeValues).toMatchObject({
+      ':penaltyMs': 300_000,
+      ':next': 2,
+    });
+    expect(nextStage!.Put!.Item).toMatchObject({ SK: 'STAGE#02', status: 'clue' });
+  });
+
   it('accepts lenient free text', async () => {
     given(
       record({

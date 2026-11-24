@@ -198,6 +198,24 @@ describe('Play', () => {
     );
   });
 
+  it('after the only guess on a one-guess question is wrong, says so and moves on', async () => {
+    const next = state(current({ stage: 2 }));
+    vi.mocked(client.answer).mockResolvedValue({ correct: false, state: next });
+    const onState = vi.fn();
+    render(
+      <Play
+        state={state(revealedMc())}
+        receivedAt={Date.now()}
+        onState={onState}
+        onReload={vi.fn()}
+      />,
+    );
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'a');
+    await userEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
+    expect(onState).toHaveBeenCalledWith(next);
+    expect(await screen.findByRole('status')).toHaveTextContent('that was your only guess');
+  });
+
   it('shows a wrong answer with the penalties so far', () => {
     const c = revealedMc({
       penaltyMs: 300_000,

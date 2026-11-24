@@ -81,8 +81,11 @@ export const handler = route(async (event: AuthedEvent) => {
     },
   };
 
+  // A one-guess question moves on after a wrong answer too, with the wrong penalty added.
+  const oneGuessWrong =
+    !correct && question.type === 'multiple_choice' && question.oneGuess === true;
   let items;
-  if (correct) {
+  if (correct || oneGuessWrong) {
     const routeIds = await getRoute(record.profile.route);
     items = [
       putAttempt,
@@ -90,7 +93,8 @@ export const handler = route(async (event: AuthedEvent) => {
         profile: record.profile,
         stage,
         nextQuestionId: routeIds[stage.stage],
-        outcome: 'correct',
+        outcome: correct ? 'correct' : 'wrong',
+        ...(oneGuessWrong && { extraPenaltyMs: penalty, wrongAttempts: stage.wrongAttempts + 1 }),
         now,
       }),
     ];
