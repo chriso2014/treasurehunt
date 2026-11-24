@@ -238,6 +238,17 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
         </LinkButton>
         {showMap && <MapView locations={state.completedLocations} start={state.map} />}
       </section>
+
+      {state.helpUrl && (
+        <a
+          href={state.helpUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 rounded-2xl border-2 border-green-600 px-6 py-4 text-center text-xl font-bold text-green-400"
+        >
+          Help me Obi Wan
+        </a>
+      )}
     </Screen>
   );
 };

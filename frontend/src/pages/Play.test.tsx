@@ -70,6 +70,7 @@ const state = (c: CurrentStage | null, totalMs = 0): TeamState => ({
   current: c,
   completedLocations: [],
   map: { centre: { lat: 51.949, lng: -0.28 }, zoom: 15 },
+  helpUrl: null,
   finishMessage: null,
   serverTime: '2026-10-28T10:00:00.000Z',
   results: [],
@@ -180,6 +181,21 @@ describe('Play', () => {
     });
     render(<Play state={state(c)} receivedAt={Date.now()} onState={vi.fn()} onReload={vi.fn()} />);
     expect(screen.getByRole('alert')).toHaveTextContent('5 of your 8 ticks were right.');
+  });
+
+  it('shows the help button with the WhatsApp link when the server sends one', () => {
+    render(
+      <Play
+        state={{ ...state(current()), helpUrl: 'https://wa.me/440000000000' }}
+        receivedAt={Date.now()}
+        onState={vi.fn()}
+        onReload={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('link', { name: 'Help me Obi Wan' })).toHaveAttribute(
+      'href',
+      'https://wa.me/440000000000',
+    );
   });
 
   it('shows a wrong answer with the penalties so far', () => {

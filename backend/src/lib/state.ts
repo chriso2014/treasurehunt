@@ -32,7 +32,7 @@ export type StateInput = {
   questions: Map<string, Question>;
   now: Date;
   signUrl: (key: string) => Promise<string>;
-  /** wa.me link to the GM, shown on the dance stage after Reveal. */
+  /** wa.me link to the GM: the help button while playing, and the dance stage after Reveal. */
   whatsappUrl?: string | null;
 };
 
@@ -162,6 +162,7 @@ export const buildState = async (input: StateInput): Promise<TeamState> => {
     current,
     completedLocations,
     map: contentConfig.map,
+    helpUrl: profile.status === 'playing' ? (input.whatsappUrl ?? null) : null,
     finishMessage:
       profile.status === 'finished' || gameStatus === 'finished'
         ? (contentConfig.finishMessage ?? null)
@@ -184,8 +185,6 @@ export const loadState = async (teamId: string): Promise<TeamState> => {
   const questions = new Map(
     await Promise.all([...ids].map(async (id) => [id, await getQuestion(id)] as const)),
   );
-  const current = record.stages.find((s) => s.stage === record.profile.currentStage);
-  const onDance = current !== undefined && questions.get(current.questionId)?.type === 'video_call';
   return buildState({
     gameStatus,
     record,
@@ -194,6 +193,7 @@ export const loadState = async (teamId: string): Promise<TeamState> => {
     questions,
     now: clock.now(),
     signUrl: viewUrl,
-    whatsappUrl: onDance ? await gmWhatsappUrl() : null,
+    // The help button needs it on every stage, the dance call on the last (cached for 5 min).
+    whatsappUrl: record.profile.status === 'playing' ? await gmWhatsappUrl() : null,
   });
 };
