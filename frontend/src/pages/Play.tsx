@@ -114,7 +114,7 @@ export const Play = ({ state, receivedAt, onState, onReload }: Props) => {
       setFlash(
         res.correct
           ? 'Correct! Here’s your next clue.'
-          : movedOn
+          : res.correct === false && movedOn
             ? 'Wrong, and that was your only guess: penalty added. Here’s your next clue.'
             : '',
       );

@@ -279,8 +279,13 @@ const playStage = async (
           answer({ attemptId, optionId: wrong.id }),
           answer({ attemptId, optionId: wrong.id }),
         );
-        check(w1.correct === false && w2.correct === false, 'wrong option is wrong');
+        // The duplicate may land after a one-guess stage has completed, and then returns null.
+        check(
+          w1.correct === false && (w2.correct === false || w2.correct === null),
+          'wrong option is wrong',
+        );
         expected += p('wrong');
+        if (question.oneGuess) return { ms: expected, outcome: 'wrong' };
       }
       const right = await answer({ attemptId: randomUUID(), optionId: question.correctOptionId });
       check(right.correct === true, 'correct option completes the stage');
